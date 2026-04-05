@@ -1,0 +1,52 @@
+---
+title: "miniproject2"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(rvest)
+library(tidyverse)
+```
+
+
+```{r}
+url <- "https://link.springer.com/search?facet-journal-id=12968&query=machine+learning&content-type=Article&dateFrom=&dateTo=&sortBy=relevance"
+
+page <- read_html(url)
+
+titles <- page |>
+  html_elements("a.app-card-open__link") |>
+  html_text()
+
+titles
+
+links <- page |>
+  html_elements("a.app-card-open__link") |>
+  html_attr("href")
+
+links <- paste0("https://link.springer.com", links)
+
+dates <- page |>
+  html_elements(".app-card-open__meta") |>
+  html_text()
+dates_clean <- dates |>
+  str_squish()
+dates_clean <- dates_clean |>
+  str_remove("Open access")
+dates_clean <- dates_clean |>
+  str_squish()
+    
+dates_clean
+
+articles <- tibble(
+  title = titles,
+  date  = dates_clean,
+  link  = links
+)
+
+articles
+```
+
+
+

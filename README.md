@@ -4,3 +4,4 @@ hello from cynthia
 hello from willemijn
 
 step 7: resolving the conflict
+
