@@ -88,6 +88,39 @@ clean_ml <- unlist(ml)
 str(clean_ml)
 ```
 
+KEYWORD 2: "Deep Learning" 3 PAGES OF WEBSITE
+
+```{r}
+get_link_from_search <- function(page, css_code) {
+  link <- page |>
+    html_elements(css_code) |>
+    html_attr("href")
+}
+
+scrape_list_links1 <- function(url) {
+  Sys.sleep(3)
+  session <- bow(url, force = TRUE)
+  page <- scrape(session)
+  list_links <- get_link_from_search(page, ".app-card-open__link")
+  complete_link <- paste0("https://link.springer.com", list_links)
+  list(complete_link)
+}
+
+# PAGE 1 - MACHINE LEARNING
+pg1_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
+
+# PAGE 2 - MACHINE LEARNING
+pg2_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
+
+# PAGE 3 - MACHINE LEARNING
+pg3_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
+
+# COMBINING THREE PAGES INTO ONE LIST OF LINKS (55 LINKS TOTAL)
+ml <- list(pg1_ml, pg2_ml, pg3_ml)
+clean_ml <- unlist(ml)
+str(clean_ml)
+```
+
 ## FUNCTION 2: USING LINKS TO GET INDIVIDUAL ARTICLE INFO
 
 ```{r}
