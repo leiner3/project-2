@@ -71,7 +71,7 @@ scrape_list_links1 <- function(url) {
   list(complete_link)
 }
 ```
-
+ 
 ## FUNCTION 2: USING LINKS TO GET INDIVIDUAL ARTICLE INFO
 
 ```{r}
@@ -137,18 +137,48 @@ scrape_list_links1 <- function(url) {
   list(complete_link)
 }
 
-# PAGE 1 - MACHINE LEARNING
-pg1_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
+# PAGE 1 - DEEP LEARNING
+pg1_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
-# PAGE 2 - MACHINE LEARNING
-pg2_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
+# PAGE 2 - DEEP LEARNING
+pg2_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
-# PAGE 3 - MACHINE LEARNING
-pg3_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
+# PAGE 3 - DEEP LEARNING
+pg3_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
 
-# COMBINING THREE PAGES INTO ONE LIST OF LINKS (55 LINKS TOTAL)
-ml <- list(pg1_ml, pg2_ml, pg3_ml)
-clean_ml <- unlist(ml)
-str(clean_ml)
+# COMBINING THREE PAGES INTO ONE LIST OF LINKS (54 LINKS TOTAL)
+dl <- list(pg1_dl, pg2_dl, pg3_dl)
+clean_dl <- unlist(dl)
+str(clean_dl)
+```
+
+KEYWORD 3: "Convolution" 2 PAGES OF WEBSITE
+
+```{r}
+get_link_from_search <- function(page, css_code) {
+  link <- page |>
+    html_elements(css_code) |>
+    html_attr("href")
+}
+
+scrape_list_links1 <- function(url) {
+  Sys.sleep(3)
+  session <- bow(url, force = TRUE)
+  page <- scrape(session)
+  list_links <- get_link_from_search(page, ".app-card-open__link")
+  complete_link <- paste0("https://link.springer.com", list_links)
+  list(complete_link)
+}
+
+# PAGE 1 - CONVOLUTION
+pg1_con <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
+
+# PAGE 2 - CONVOLUTION
+pg2_con <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
+
+# COMBINING TWO PAGES INTO ONE LIST OF LINKS (39 LINKS TOTAL)
+con <- list(pg1_con, pg2_con)
+clean_con <- unlist(con)
+str(clean_con)
 ```
 
