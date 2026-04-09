@@ -145,7 +145,6 @@ scrape_individual_article <- function(x) {
   tibble(date = jcmr_date, title = jcmr_title, volume = jcmr_vol, authors = jcmr_author, type = jcmr_type, abstract = jcmr_abstract, method = jcmr_method)
 }
 
-details <- purrr::map(clean_ml, scrape_individual_article)
+details <- purrr::map(clean_ml[[1]], scrape_individual_article)
 bind_rows(details)
 ```
-
