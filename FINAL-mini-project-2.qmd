@@ -55,8 +55,6 @@ view(articles)
 
 ## FUNCTION 1: SCRAPING INDIVIDUAL ARTICLE LINKS
 
-KEYWORD 1: "MACHINE LEARNING" 3 PAGES OF WEBSITE
-
 ```{r}
 get_link_from_search <- function(page, css_code) {
   link <- page |>
@@ -72,7 +70,36 @@ scrape_list_links1 <- function(url) {
   complete_link <- paste0("https://link.springer.com", list_links)
   list(complete_link)
 }
+```
 
+## FUNCTION 2: USING LINKS TO GET INDIVIDUAL ARTICLE INFO
+
+```{r}
+get_info_from_page <- function(page, css_code) {
+  page |>
+    html_nodes(css_code) |>
+    html_text()
+}
+
+scrape_individual_article <- function(x) {
+  Sys.sleep(3)
+  session <- bow(x, force = TRUE)
+  page <- scrape(session)
+  jcmr_title <- get_info_from_page(page, ".c-article-title")
+  jcmr_vol <- get_info_from_page(page,
+                            ".c-article-identifiers--cite-list .c-article-identifiers__item:nth-child(1)")
+  jcmr_abstract <- get_info_from_page(page, "#Abs1-content p:nth-child(2)")
+  jcmr_method <- get_info_from_page(page, "#Abs1-content p:nth-child(4)")
+  jcmr_author <- get_info_from_page(page, "#main-content header")
+  jcmr_type <- get_info_from_page(page, ".c-article-title+ .c-article-identifiers .c-article-identifiers__item:nth-child(1)")
+  jcmr_date <- get_info_from_page(page, ".c-article-identifiers__item time")
+  tibble(date = jcmr_date, title = jcmr_title, volume = jcmr_vol, authors = jcmr_author, type = jcmr_type, abstract = jcmr_abstract, method = jcmr_method)
+}
+```
+
+KEYWORD 1: "MACHINE LEARNING" 3 PAGES OF WEBSITE
+
+```{r}
 # PAGE 1 - MACHINE LEARNING
 pg1_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
@@ -86,6 +113,10 @@ pg3_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+lea
 ml <- list(pg1_ml, pg2_ml, pg3_ml)
 clean_ml <- unlist(ml)
 str(clean_ml)
+
+# Scraping information from each individual article
+details <- purrr::map(clean_ml, scrape_individual_article)
+bind_rows(details)
 ```
 
 KEYWORD 2: "Deep Learning" 3 PAGES OF WEBSITE
@@ -121,30 +152,3 @@ clean_ml <- unlist(ml)
 str(clean_ml)
 ```
 
-## FUNCTION 2: USING LINKS TO GET INDIVIDUAL ARTICLE INFO
-
-```{r}
-get_info_from_page <- function(page, css_code) {
-  page |>
-    html_nodes(css_code) |>
-    html_text()
-}
-
-scrape_individual_article <- function(x) {
-  Sys.sleep(3)
-  session <- bow(x, force = TRUE)
-  page <- scrape(session)
-  jcmr_title <- get_info_from_page(page, ".c-article-title")
-  jcmr_vol <- get_info_from_page(page,
-                            ".c-article-identifiers--cite-list .c-article-identifiers__item:nth-child(1)")
-  jcmr_abstract <- get_info_from_page(page, "#Abs1-content p:nth-child(2)")
-  jcmr_method <- get_info_from_page(page, "#Abs1-content p:nth-child(4)")
-  jcmr_author <- get_info_from_page(page, "#main-content header")
-  jcmr_type <- get_info_from_page(page, ".c-article-title+ .c-article-identifiers .c-article-identifiers__item:nth-child(1)")
-  jcmr_date <- get_info_from_page(page, ".c-article-identifiers__item time")
-  tibble(date = jcmr_date, title = jcmr_title, volume = jcmr_vol, authors = jcmr_author, type = jcmr_type, abstract = jcmr_abstract, method = jcmr_method)
-}
-
-details <- purrr::map(clean_ml, scrape_individual_article)
-bind_rows(details)
-```
