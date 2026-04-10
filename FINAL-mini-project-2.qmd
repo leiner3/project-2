@@ -75,34 +75,34 @@ scrape_list_links1 <- function(url) {                                   # defini
 ## FUNCTION 2: USING LINKS TO GET INDIVIDUAL ARTICLE INFO
 
 ```{r}
-get_info_from_page <- function(page, css_code) {
-  result <- page |>
-    html_elements(css_code) |>
-    html_text(trim = TRUE)
-  if (length(result) == 0) 
-    return(NA_character_)
-  result[1]  # take first match only
+get_info_from_page <- function(page, css_code) {                        # defining the function "get_info_from_search", with two arguments
+  result <- page |>                                                     # piping the object "page" into the next function, saving the result into "result"
+    html_elements(css_code) |>                                          # find all of the html elements that match the CSS code
+    html_text(trim = TRUE)                                              # retrieve text content from each selected element. the argument trim = TRUE will trim leading and trailing spaces. 
+  if (length(result) == 0)                                              # if length of the supposedly text string is 0 
+    return(NA_character_)                                               # then return the value to be NA
+  result[1]                                                             # take the first match only
 }
 
-scrape_individual_article <- function(x) {
-  Sys.sleep(3)
-  session <- bow(x, force = TRUE)
-  page <- scrape(session)
-  jcmr_title <- get_info_from_page(page, 
+scrape_individual_article <- function(x) {                              # defining the function "scrape_individual_article", with one argument "x"
+  Sys.sleep(3)                                                          # polite scraping
+  session <- bow(x, force = TRUE)                                       # creates a browser session for the URL(s) that we will supply from our list of url links
+  page <- scrape(session)                                               # scrape the given URL
+  jcmr_title <- get_info_from_page(page,                                # scrape the "title" element from each URL
                                    ".c-article-title")
-  jcmr_vol <- get_info_from_page(page,
+  jcmr_vol <- get_info_from_page(page,                                  # scrape the "volume" element from each URL
                             ".c-article-identifiers--cite-list .c-article-identifiers__item:nth-child(1)")
-  jcmr_abstract <- get_info_from_page(page, 
+  jcmr_abstract <- get_info_from_page(page,                             # scrape the "abstract" element from each URL
                                       "#Abs1-content p:nth-child(2)")
-  jcmr_method <- get_info_from_page(page, 
+  jcmr_method <- get_info_from_page(page,                               # scrape the "method" element from each URL 
                                     "#Abs1-content p:nth-child(4)")
-  jcmr_author <- get_info_from_page(page, 
+  jcmr_author <- get_info_from_page(page,                               # scrape the "authors" element from each URL
                                     "#main-content header")
-  jcmr_type <- get_info_from_page(page, 
+  jcmr_type <- get_info_from_page(page,                                 # scrape the "article type" element from each URL
                                   ".c-article-title+ .c-article-identifiers .c-article-identifiers__item:nth-child(1)")
-  jcmr_date <- get_info_from_page(page, 
+  jcmr_date <- get_info_from_page(page,                                 # scrape the "publishing date" element from each URL
                                   ".c-article-identifiers__item time")
-  tibble(date = jcmr_date, 
+  tibble(date = jcmr_date,                                              # create a tibble containing all of the scraped elements will modified column names
          title = jcmr_title, 
          volume = jcmr_vol, 
          authors = jcmr_author, 
@@ -115,19 +115,18 @@ scrape_individual_article <- function(x) {
 #### KEYWORD 1: "Machine Learning" 3 PAGES OF WEBSITE
 
 ```{r}
-# PAGE 1 - MACHINE LEARNING
+# Scraping links from PAGE 1 - MACHINE LEARNING
 pg1_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
-# PAGE 2 - MACHINE LEARNING
+# Scraping links from PAGE 2 - MACHINE LEARNING
 pg2_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
-# PAGE 3 - MACHINE LEARNING
+# Scraping links from PAGE 3 - MACHINE LEARNING
 pg3_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
 
 # COMBINING THREE PAGES INTO ONE LIST OF LINKS (55 LINKS TOTAL)
 ml <- list(pg1_ml, pg2_ml, pg3_ml)
 clean_ml <- unlist(ml)
-str(clean_ml)
 
 # Scraping information from each individual article
 details_kw1 <- purrr::map(clean_ml, scrape_individual_article)
@@ -139,13 +138,13 @@ details_kw1 <- bind_rows(details_kw1)
 #### KEYWORD 2: "Deep Learning" 3 PAGES OF WEBSITE
 
 ```{r}
-# PAGE 1 - DEEP LEARNING
+# Scraping links from PAGE 1 - DEEP LEARNING
 pg1_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
-# PAGE 2 - DEEP LEARNING
+# Scraping links from PAGE 2 - DEEP LEARNING
 pg2_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
-# PAGE 3 - DEEP LEARNING
+# Scraping links from PAGE 3 - DEEP LEARNING
 pg3_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
 
 # COMBINING THREE PAGES INTO ONE LIST OF LINKS (54 LINKS TOTAL)
@@ -153,7 +152,7 @@ dl <- list(pg1_dl, pg2_dl, pg3_dl)
 clean_dl <- unlist(dl)
 
 # Scraping information from each individual article
-details_kw2 <- purrr::map(clean_dl, scrape_individual_article)
+details_kw2 <- purrr::map(clean_dl, scrape_individual_article) 
 bind_rows(details_kw2)
 
 details_kw2 <- bind_rows(details_kw2)
@@ -163,10 +162,10 @@ details_kw2 <- bind_rows(details_kw2)
 
 ```{r}
 
-# PAGE 1 - CONVOLUTION
+# Scraping links from PAGE 1 - CONVOLUTION
 pg1_con <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
-# PAGE 2 - CONVOLUTION
+# Scraping links from PAGE 2 - CONVOLUTION
 pg2_con <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
 # COMBINING TWO PAGES INTO ONE LIST OF LINKS (39 LINKS TOTAL)
@@ -183,10 +182,10 @@ details_kw3 <- bind_rows(details_kw3)
 #### KEYWORD 4: "Artificial Intelligence" 2 PAGES OF WEBSITE
 
 ```{r}
-# PAGE 1 - ARTIFICIAL INTELLIGENCE
+# Scraping links from PAGE 1 - ARTIFICIAL INTELLIGENCE
 pg1_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+intelligence&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
-# PAGE 2 - ARTIFICIAL INTELLIGENCE
+# Scraping links from PAGE 2 - ARTIFICIAL INTELLIGENCE
 pg2_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+intelligence&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
 # COMBINING TWO PAGES INTO ONE LIST OF LINKS (38 LINKS TOTAL)
