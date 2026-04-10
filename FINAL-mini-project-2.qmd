@@ -16,34 +16,40 @@ library(purrr)
 ```
 
 ```{r}
+# defining the url to be its own value to make it easier to work with
 url <- "https://link.springer.com/search?facet-journal-id=12968&query=machine+learning&content-type=Article&dateFrom=&dateTo=&sortBy=relevance"
 
+# Parse the HTML content of the page
 page <- read_html(url)
 
+# Extracting article titles using the CSS selector
 titles <- page |>
   html_elements("a.app-card-open__link") |>
   html_text()
 
 titles
 
+# Extracting relative URLs for each article
 links <- page |>
   html_elements("a.app-card-open__link") |>
   html_attr("href")
-
 links <- paste0("https://link.springer.com", links)
 
+# Extracting publication date 
 dates <- page |>
   html_elements(".app-card-open__meta") |>
   html_text()
+
+# Cleaning the date strings
 dates_clean <- dates |>
   str_squish()
 dates_clean <- dates_clean |>
   str_remove("Open access")
 dates_clean <- dates_clean |>
   str_squish()
-    
 dates_clean
 
+# Combining the extracted data into a single tibble for inspection
 articles <- tibble(
   title = titles,
   date  = dates_clean,
@@ -124,7 +130,7 @@ pg2_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+lea
 # Scraping links from PAGE 3 - MACHINE LEARNING
 pg3_ml <- scrape_list_links1("https://link.springer.com/search?query=machine+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
 
-# COMBINING THREE PAGES INTO ONE LIST OF LINKS (55 LINKS TOTAL)
+# Combining two pages into one list of links (55 links total)
 ml <- list(pg1_ml, pg2_ml, pg3_ml)
 clean_ml <- unlist(ml)
 
@@ -132,6 +138,7 @@ clean_ml <- unlist(ml)
 details_kw1 <- purrr::map(clean_ml, scrape_individual_article)
 bind_rows(details_kw1)
 
+# Turning the binded rows into a tibble
 details_kw1 <- bind_rows(details_kw1)
 ```
 
@@ -147,7 +154,7 @@ pg2_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learni
 # Scraping links from PAGE 3 - DEEP LEARNING
 pg3_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=3")
 
-# COMBINING THREE PAGES INTO ONE LIST OF LINKS (54 LINKS TOTAL)
+# Combining two pages into one list of links (54 links total)
 dl <- list(pg1_dl, pg2_dl, pg3_dl)
 clean_dl <- unlist(dl)
 
@@ -155,6 +162,7 @@ clean_dl <- unlist(dl)
 details_kw2 <- purrr::map(clean_dl, scrape_individual_article) 
 bind_rows(details_kw2)
 
+# Turning the binded rows into a tibble
 details_kw2 <- bind_rows(details_kw2)
 ```
 
@@ -168,7 +176,7 @@ pg1_con <- scrape_list_links1("https://link.springer.com/search?query=convolutio
 # Scraping links from PAGE 2 - CONVOLUTION
 pg2_con <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
-# COMBINING TWO PAGES INTO ONE LIST OF LINKS (39 LINKS TOTAL)
+# Combining two pages into one list of links (39 links total)
 con <- list(pg1_con, pg2_con)
 clean_con <- unlist(con)
 
@@ -176,6 +184,7 @@ clean_con <- unlist(con)
 details_kw3 <- purrr::map(clean_con, scrape_individual_article)
 bind_rows(details_kw3)
 
+# Turning the binded rows into a tibble
 details_kw3 <- bind_rows(details_kw3)
 ```
 
@@ -188,7 +197,7 @@ pg1_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+
 # Scraping links from PAGE 2 - ARTIFICIAL INTELLIGENCE
 pg2_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+intelligence&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
-# COMBINING TWO PAGES INTO ONE LIST OF LINKS (38 LINKS TOTAL)
+# Combining two pages into one list of links (38 links total)
 ai <- list(pg1_ai, pg2_ai)
 clean_ai <- unlist(ai)
 
@@ -196,16 +205,23 @@ clean_ai <- unlist(ai)
 details_kw5 <- purrr::map(clean_ai, scrape_individual_article)
 bind_rows(details_kw5)
 
+# Turning the binded rows into a tibble
 details_kw5 <- bind_rows(details_kw5)
 ```
 
 ```{r}
+# Combining all data tables with different key words into one tibble
 all_articles <- bind_rows(
-  details_kw1 |> mutate(keyword = "machine learning"),
-  details_kw2 |> mutate(keyword = "deep learning"),
-  details_kw3 |> mutate(keyword = "convolution"), 
-  details_kw5 |> mutate(keyword = "artificial intelligence")
+  details_kw1 |> 
+    mutate(keyword = "machine learning"),
+  details_kw2 |>
+    mutate(keyword = "deep learning"),
+  details_kw3 |> 
+    mutate(keyword = "convolution"), 
+  details_kw5 |> 
+    mutate(keyword = "artificial intelligence")
 )
 
+# Creating the CSV file
 write_csv(all_articles, "springer_articles.csv")
 ```
