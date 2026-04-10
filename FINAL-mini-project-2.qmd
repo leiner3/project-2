@@ -56,19 +56,19 @@ view(articles)
 ## FUNCTION 1: SCRAPING INDIVIDUAL ARTICLE LINKS
 
 ```{r}
-get_link_from_search <- function(page, css_code) {
-  link <- page |>
-    html_elements(css_code) |>
-    html_attr("href")
+get_link_from_search <- function(page, css_code) {                      # defining the function "get_link_from_search", with two arguments
+  link <- page |>                                                       # piping the object "page" into the next function
+    html_elements(css_code) |>                                          # find all html elements that match the CSS code
+    html_attr("href")                                                   # extracts the value of the "href" attribute from each selected element.
 }
 
-scrape_list_links1 <- function(url) {
-  Sys.sleep(3)
-  session <- bow(url, force = TRUE)
-  page <- scrape(session)
-  list_links <- get_link_from_search(page, ".app-card-open__link")
-  complete_link <- paste0("https://link.springer.com", list_links)
-  list(complete_link)
+scrape_list_links1 <- function(url) {                                   # defining the function "scrape_list_links1" that will take our url
+  Sys.sleep(3)                                                          # polite scraping
+  session <- bow(url, force = TRUE)                                     # creates a browser session for the given URL
+  page <- scrape(session)                                               # scrape the given URL
+  list_links <- get_link_from_search(page, ".app-card-open__link")      # extract the links using previous function that correspond to this CSS code
+  complete_link <- paste0("https://link.springer.com", list_links)      # stitching the extracted links with base domain
+  list(complete_link)                                                   # wraps it into a list of vector links :)
 }
 ```
 
@@ -79,9 +79,8 @@ get_info_from_page <- function(page, css_code) {
   result <- page |>
     html_elements(css_code) |>
     html_text(trim = TRUE)
-  
-  if (length(result) == 0) return(NA_character_)
-  
+  if (length(result) == 0) 
+    return(NA_character_)
   result[1]  # take first match only
 }
 
@@ -89,15 +88,27 @@ scrape_individual_article <- function(x) {
   Sys.sleep(3)
   session <- bow(x, force = TRUE)
   page <- scrape(session)
-  jcmr_title <- get_info_from_page(page, ".c-article-title")
+  jcmr_title <- get_info_from_page(page, 
+                                   ".c-article-title")
   jcmr_vol <- get_info_from_page(page,
                             ".c-article-identifiers--cite-list .c-article-identifiers__item:nth-child(1)")
-  jcmr_abstract <- get_info_from_page(page, "#Abs1-content p:nth-child(2)")
-  jcmr_method <- get_info_from_page(page, "#Abs1-content p:nth-child(4)")
-  jcmr_author <- get_info_from_page(page, "#main-content header")
-  jcmr_type <- get_info_from_page(page, ".c-article-title+ .c-article-identifiers .c-article-identifiers__item:nth-child(1)")
-  jcmr_date <- get_info_from_page(page, ".c-article-identifiers__item time")
-  tibble(date = jcmr_date, title = jcmr_title, volume = jcmr_vol, authors = jcmr_author, type = jcmr_type, abstract = jcmr_abstract, method = jcmr_method)
+  jcmr_abstract <- get_info_from_page(page, 
+                                      "#Abs1-content p:nth-child(2)")
+  jcmr_method <- get_info_from_page(page, 
+                                    "#Abs1-content p:nth-child(4)")
+  jcmr_author <- get_info_from_page(page, 
+                                    "#main-content header")
+  jcmr_type <- get_info_from_page(page, 
+                                  ".c-article-title+ .c-article-identifiers .c-article-identifiers__item:nth-child(1)")
+  jcmr_date <- get_info_from_page(page, 
+                                  ".c-article-identifiers__item time")
+  tibble(date = jcmr_date, 
+         title = jcmr_title, 
+         volume = jcmr_vol, 
+         authors = jcmr_author, 
+         type = jcmr_type, 
+         abstract = jcmr_abstract, 
+         method = jcmr_method)
 }
 ```
 
@@ -199,7 +210,3 @@ all_articles <- bind_rows(
 
 write_csv(all_articles, "springer_articles.csv")
 ```
-
-
-
-
