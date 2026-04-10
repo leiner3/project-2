@@ -1,0 +1,41 @@
+---
+title: "Data_Cleaning"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Loading...
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(stringr)
+
+jcmr_articles <- read_csv("~/project-2/Final_CSV_Springer_Articles.csv")
+```
+
+
+## Cleaning
+
+
+```{r}
+#| echo: false
+view(jcmr_articles)
+
+test <- jcmr_articles |>
+  distinct(volume, .keep_all = TRUE) |>
+  mutate(date = dmy(date),
+         n_volume = str_extract(volume, "\\d{2}"),
+         authors = str_squish(authors),
+         authors = str_remove(authors, "Explore all metrics"))  
+
+view(test)
+```
+
+
+
+
+
+
