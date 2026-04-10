@@ -16,12 +16,9 @@ library(stringr)
 jcmr_articles <- read_csv("~/project-2/Final_CSV_Springer_Articles.csv")
 ```
 
-
-## Cleaning
-
+## Quick Cleaning
 
 ```{r}
-#| echo: false
 view(jcmr_articles)
 
 test <- jcmr_articles |>
@@ -30,8 +27,6 @@ test <- jcmr_articles |>
          n_volume = str_extract(volume, "\\d{2}"),
          authors = str_squish(authors),
          authors = str_remove(authors, "Explore all metrics"))  
-
-view(test)
 ```
 
 

@@ -1,5 +1,6 @@
 ---
-title: "miniproject2"
+title: "MiniProject2_WebScraping"
+author: "Cynthia Budiyanto and Willemijn Leiner"
 format: pdf
 editor: visual
 editor_options: 
@@ -16,7 +17,7 @@ library(purrr)
 ```
 
 ```{r}
-# defining the url to be its own value to make it easier to work with
+# Defining the url to be its own value to make it easier to work with
 url <- "https://link.springer.com/search?facet-journal-id=12968&query=machine+learning&content-type=Article&dateFrom=&dateTo=&sortBy=relevance"
 
 # Parse the HTML content of the page
@@ -135,7 +136,7 @@ ml <- list(pg1_ml, pg2_ml, pg3_ml)
 clean_ml <- unlist(ml)
 
 # Scraping information from each individual article
-details_kw1 <- purrr::map(clean_ml, scrape_individual_article)
+details_kw1 <- purrr::map(clean_ml, scrape_individual_article)        # Using our pre-made function "scrape_individual_particle" to be iterated for all of the vectors in the list
 bind_rows(details_kw1)
 
 # Turning the binded rows into a tibble
@@ -159,7 +160,7 @@ dl <- list(pg1_dl, pg2_dl, pg3_dl)
 clean_dl <- unlist(dl)
 
 # Scraping information from each individual article
-details_kw2 <- purrr::map(clean_dl, scrape_individual_article) 
+details_kw2 <- purrr::map(clean_dl, scrape_individual_article)        # Using our pre-made function "scrape_individual_particle" to be iterated for all of the vectors in the list 
 bind_rows(details_kw2)
 
 # Turning the binded rows into a tibble
@@ -181,7 +182,7 @@ con <- list(pg1_con, pg2_con)
 clean_con <- unlist(con)
 
 # Scraping information from each individual article
-details_kw3 <- purrr::map(clean_con, scrape_individual_article)
+details_kw3 <- purrr::map(clean_con, scrape_individual_article)       # Using our pre-made function "scrape_individual_particle" to be iterated for all of the vectors in the list
 bind_rows(details_kw3)
 
 # Turning the binded rows into a tibble
@@ -201,8 +202,8 @@ pg2_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+
 ai <- list(pg1_ai, pg2_ai)
 clean_ai <- unlist(ai)
 
-# Scraping information from each individual article
-details_kw5 <- purrr::map(clean_ai, scrape_individual_article)
+# Scraping information from each individual article.
+details_kw5 <- purrr::map(clean_ai, scrape_individual_article)        # Using our pre-made function "scrape_individual_particle" to be iterated for all of the vectors in the list
 bind_rows(details_kw5)
 
 # Turning the binded rows into a tibble
