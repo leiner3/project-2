@@ -21,12 +21,14 @@ jcmr_articles <- read_csv("~/project-2/Final_CSV_Springer_Articles.csv")
 ```{r}
 view(jcmr_articles)
 
-test <- jcmr_articles |>
+clean_jcmr <- jcmr_articles |>
   distinct(volume, .keep_all = TRUE) |>
   mutate(date = dmy(date),
          n_volume = str_extract(volume, "\\d{2}"),
          authors = str_squish(authors),
          authors = str_remove(authors, "Explore all metrics"))  
+
+write_csv(clean_jcmr, "clean_jcmr.csv")
 ```
 
 
