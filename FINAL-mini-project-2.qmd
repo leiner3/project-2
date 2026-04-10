@@ -76,9 +76,13 @@ scrape_list_links1 <- function(url) {
 
 ```{r}
 get_info_from_page <- function(page, css_code) {
-  page |>
-    html_nodes(css_code) |>
-    html_text()
+  result <- page |>
+    html_elements(css_code) |>
+    html_text(trim = TRUE)
+  
+  if (length(result) == 0) return(NA_character_)
+  
+  result[1]  # take first match only
 }
 
 scrape_individual_article <- function(x) {
@@ -117,12 +121,13 @@ str(clean_ml)
 # Scraping information from each individual article
 details_kw1 <- purrr::map(clean_ml, scrape_individual_article)
 bind_rows(details_kw1)
+
+details_kw1 <- bind_rows(details_kw1)
 ```
 
 #### KEYWORD 2: "Deep Learning" 3 PAGES OF WEBSITE
 
 ```{r}
-
 # PAGE 1 - DEEP LEARNING
 pg1_dl <- scrape_list_links1("https://link.springer.com/search?query=deep+learning&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
@@ -139,6 +144,8 @@ clean_dl <- unlist(dl)
 # Scraping information from each individual article
 details_kw2 <- purrr::map(clean_dl, scrape_individual_article)
 bind_rows(details_kw2)
+
+details_kw2 <- bind_rows(details_kw2)
 ```
 
 #### KEYWORD 3: "Convolution" 2 PAGES OF WEBSITE
@@ -159,23 +166,17 @@ clean_con <- unlist(con)
 details_kw3 <- purrr::map(clean_con, scrape_individual_article)
 bind_rows(details_kw3)
 
+details_kw3 <- bind_rows(details_kw3)
 ```
 
-#### KEYWORD 4: "Segmentation" 2 PAGES OF WEBSITE
-
-```{r}
-
-```
-
-
-#### KEYWORD 5: "Artificial Intelligence" 2 PAGES OF WEBSITE
+#### KEYWORD 4: "Artificial Intelligence" 2 PAGES OF WEBSITE
 
 ```{r}
 # PAGE 1 - ARTIFICIAL INTELLIGENCE
-pg1_ai <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
+pg1_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+intelligence&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=1")
 
 # PAGE 2 - ARTIFICIAL INTELLIGENCE
-pg2_ai <- scrape_list_links1("https://link.springer.com/search?query=convolution&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
+pg2_ai <- scrape_list_links1("https://link.springer.com/search?query=artificial+intelligence&content-type=Article&sortBy=relevance&search-within=Journal&facet-journal-id=12968&page=2")
 
 # COMBINING TWO PAGES INTO ONE LIST OF LINKS (38 LINKS TOTAL)
 ai <- list(pg1_ai, pg2_ai)
@@ -184,8 +185,20 @@ clean_ai <- unlist(ai)
 # Scraping information from each individual article
 details_kw5 <- purrr::map(clean_ai, scrape_individual_article)
 bind_rows(details_kw5)
+
+details_kw5 <- bind_rows(details_kw5)
 ```
 
+```{r}
+all_articles <- bind_rows(
+  details_kw1 |> mutate(keyword = "machine learning"),
+  details_kw2 |> mutate(keyword = "deep learning"),
+  details_kw3 |> mutate(keyword = "convolution"), 
+  details_kw5 |> mutate(keyword = "artificial intelligence")
+)
+
+write_csv(all_articles, "springer_articles.csv")
+```
 
 
 
