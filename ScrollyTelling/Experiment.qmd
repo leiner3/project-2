@@ -1,0 +1,81 @@
+---
+title: ""
+format:
+  closeread-html:
+    css: final.css
+    toc: false
+    linkcolor: tomato
+    remove-header-space: true
+    debug-mode: false
+    embed-resources: true
+---
+
+```{r}
+#| echo: false
+#| message: false
+
+library(tidyverse)
+library(ggplot2)
+library(leaflet)
+library(patchwork)
+library(dplyr)
+library(stringr)
+library(lubridate)
+
+jcmr <- read_csv("~/project-2/clean_jcmr.csv")
+```
+
+::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
+
+::::{.cr-section layout="sidebar-right"}
+
+@cr-title
+
+:::{#cr-title .large-fixed-text-left}
+Journal of Cardiovascular Magnetic Resonance **Text Analysis**
+
+<br>
+
+<span class= "medium-fixed-text">SDS 264 Spring 2026.</span>
+:::
+
+Cynthia Budiyanto and Willemijn Leiner
+
+::::
+
+::::{.cr-section layout="sidebar-right"}
+
+@cr-rationale
+
+::: {#cr-rationale .large-fixed-text-left}
+Understanding the progression of <span style="color:#6EAB8A">*AI*</span> and <span style="color:#6EAB8A">*Machine Learning*</span> development in the Cardiovascular Magnetic Resonance field
+:::
+
+![](stethoscope.gif){width="100%"}
+::::
+
+:::::
+
+::::{.cr-section layout="overlay-center"}
+
+:::{#cr-photo1 .fullpage}
+![](cardiac.jpg)
+:::
+
+:::{.progress-block}
+
+Artificial Intelligence has transformed medical imaging, and cardiac MRI (magnetic resonance imaging) is one of the most active frontiers. @cr-photo1
+
+It is essential to examine how research on cardiovascular imaging methods development has evolved recently and how knowledge within this field is being generated.
+
+By utilizing text analysis and natural language processing, we can interpret large volumes of textual data regarding design, development, manufacture, and evaluation of cardiovascular imaging technologies. 
+
+Journal of Cardiovascular Magnetic Resonance (JCMR) is a leading publication site for basic, translational, and clinical research on cardiovascular magnetic resonance (CMR) methods.
+
+Our goal is to transform this large set of unstructured data into well‐organized, accessible, and meaningful insights. 
+
+We want to highlight the growing role of AI and Machine Learning in the development of CMR, particularly for audiences outside the research and medical imaging communities.
+
+:::
+
+::::

@@ -1,0 +1,35 @@
+---
+title: "Journal of Cardiovascular Magnetic Resonance Text Analysis"
+description: "Understanding the progression of AI and Machine Learning development in the Cardiovascular Magnetic Resonance field"
+author: Cynthia Budiyanto and Willemijn Leiner
+date: "2025/05/15"
+format:
+  closeread-html:
+    css: gapminder.css
+    code-tools: false
+    fig-format: svg
+    toc: false
+    linkcolor: tomato
+    cr-style:
+      narrative-background-color-sidebar: "#DB778F"
+      narrative-text-color-sidebar: "#40111C"
+      section-background-color: "#FFFFFF"
+      narrative-font-size: 14pt
+      narrative-font-family: Ubuntu
+    remove-header-space: true
+    debug-mode: false
+    embed-resources: true
+---
+
+---
+title: Mobility Matters
+format:
+  closeread-html:
+    remove-header-space: true
+    cr-style: 
+      section-background-color: '#114B5F'
+      bs-body-font-family: 'Apple Garamond'
+      poem-font-family: 'Apple Garamond'
+bibliography: references.bib
+csl: diabetologia.csl
+---
