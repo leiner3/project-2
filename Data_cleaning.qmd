@@ -28,9 +28,10 @@ clean_jcmr <- jcmr_articles |>
          authors = str_squish(authors),
          authors = str_remove(authors, "Explore all metrics"))  
 
+view(clean_jcmr)
+
 write_csv(clean_jcmr, "clean_jcmr.csv")
 ```
-
 
 
 
