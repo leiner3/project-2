@@ -21,6 +21,8 @@ library(patchwork)
 library(dplyr)
 library(stringr)
 library(lubridate)
+library(tidytext)
+library(textdata)
 
 jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 ```
@@ -79,3 +81,7 @@ We want to highlight the growing role of AI and Machine Learning in the developm
 :::
 
 ::::
+
+Data Source + Github links!
+
+
