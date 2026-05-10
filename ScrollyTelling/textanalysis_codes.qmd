@@ -18,6 +18,7 @@ library(tidytext)
 library(textdata)
 library(igraph)
 library(ggraph)
+library(gganimate)
 
 jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 ```
@@ -26,7 +27,7 @@ jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 #| include: false
 # Adding specific stopwords. Here, we insert the "general" words, that we can  expect from any scientific article about CMR and fluff words that we would expect from any science journals (study, analysis, treatment, human, mechanisms, mode, findings, function, etc).
 
-cmr_stopword <- c("study", "scientific", "high", "study", "increased", "induced", "levels", "expression", "potential", "treatment", "related", "significantly", "accumulation", "showed", "related", "specific", "yrs", "age", "effect", "effects", "results", "analysis", "revealed", "human", "1", "2", "3", "group", "formation", "reduced", "function", "decreased", "model", "fat", "compared", "based", "size", "size", "stability", "assessment", "method", "clinical", "activity", "findings", "mechanisms", "energy", "exposure", "content", "properties", "development", "higher", "metabolic", "disease", "red", "white", "recovery", "cellular", "additional", "simultaneously", "emulsion", "molecular", "identified", "compounds", "composition", "mature", "site", "extracts", "significant", "including", "light", "liquid", "wide", "range", "time", "mg", "kg", "dependent", "independent", "patients", "background", "objectives", "recent", "studies")
+cmr_stopword <- c("study", "scientific", "high", "study", "increased", "induced", "levels", "expression", "potential", "treatment", "related", "significantly", "accumulation", "showed", "related", "specific", "yrs", "age", "effect", "effects", "results", "analysis", "revealed", "human", "1", "2", "3", "group", "formation", "reduced", "function", "decreased", "model", "fat", "compared", "based", "size", "size", "stability", "assessment", "method", "clinical", "activity", "findings", "mechanisms", "energy", "exposure", "content", "properties", "development", "higher", "metabolic", "disease", "red", "white", "recovery", "cellular", "additional", "simultaneously", "emulsion", "molecular", "identified", "compounds", "composition", "mature", "site", "extracts", "significant", "including", "dependent", "independent", "patients", "background", "objectives", "recent", "studies", "information")
 
 lexicon <-  rep("custom", times = length(word))
 
@@ -37,6 +38,19 @@ names(full_stopwords) <- c("word", "lexicon")
 # Add the dataframe to stop_words df that exists in the library stopwords
 stop_words_fix <-  dplyr::bind_rows(stop_words, full_stopwords)
 view(stop_words_fix)
+
+# For filtering (specifically) individual words
+remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "accuracy"
+)
+
+# For replacing phrases into one word
+replace_dict <- c(
+  "cardiovascular magnetic resonance" = "cmr",
+  "magnetic resonance imaging" = "mri",
+  "computed tomography" = "ct",
+  "dice similarity coefficient" = "dsc",
+  "late gadolinium enhancement" = "lge"
+)
 ```
 
 ```{r}
@@ -50,7 +64,8 @@ clean_jcmr |>
   anti_join(stop_words_fix) |>
   count(word, sort = TRUE) |>
   filter(word != "NA") |>
-  slice_max(n, n = 20) |>
+  filter(!word %in% c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "accuracy")) |>
+  slice_max(n, n = 30) |>
   ggplot(aes(fct_reorder(word, n), n)) +
   geom_col() +
   coord_flip()
@@ -181,18 +196,6 @@ method_bigram <- clean_jcmr |>
 method_trigram <- clean_jcmr |>
   select(method) |>
   mutate(method = str_to_lower(method)) |>
-  mutate(method = str_replace_all(
-      method,
-      "cardiovascular magnetic resonance",
-      "cmr"
-    )
-  ) |>
-  mutate(method = str_replace_all(
-      method,
-      "magnetic resonance imaging",
-      "mri"
-    )
-  ) |>
   unnest_tokens(bigram, method, token = "ngrams", n = 3) |>
   filter(bigram != "NA") |>
   filter(!str_detect(bigram, "^\\d")) |>
@@ -206,3 +209,14 @@ method_trigram <- clean_jcmr |>
 
 ```
 
+unigram: make a replace_phrases list.
+we would love to have mri..mra.. lge.. dsc... icc
+
+
+bigram: make a replace_phrases list: 4d... 3d...
+potentially make a remove_words list that have 3 words combination. 
+because we do not want "magnetic resonance" "cardiovascular magnetic", etc... bruh
+
+trigram: make a remove_word list that will filter out one word abbreviation!
+
+then. make a gganimate out of this! solid ! ! !
