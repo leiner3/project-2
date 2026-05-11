@@ -26,8 +26,11 @@ library(textdata)
 library(igraph)
 library(ggraph)
 library(treemapify)
+library(threejs)
+library(htmlwidgets)
+library(visNetwork)
 
-jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 ::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
