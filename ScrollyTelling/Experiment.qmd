@@ -167,7 +167,6 @@ remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images",
                  "image", "imaging", "blood", "learning", "magnetic", 
                  "resonance", "flow", "approach", "accuracy")
 
-# Bar chart
 jcmr |>
   filter(!is.na(abstract)) |>
   select(keyword, abstract) |>
@@ -201,25 +200,7 @@ jcmr |>
 ```
 :::
 
-Across all keywords, words like "myocardial," "perfusion," 
-and "quantification" appear frequently, reflecting the core 
-focus of cardiac MRI research.
-
-In "machine learning" abstracts, "myocardial" dominates 
-by a wide margin, suggesting most ML research focuses on 
-analyzing heart muscle tissue.
-
-"Deep learning" abstracts highlight "coronary" and "strain" 
-prominently, pointing to a focus on coronary artery imaging 
-and cardiac motion analysis.
-
-"Artificial intelligence" abstracts center on "lv" (left 
-ventricle) and "ventricular" function, suggesting AI is 
-most often applied to measuring heart chamber performance.
-
-"Convolution" abstracts stand out with "perfusion" and 
-"3d" appearing frequently, indicating a focus on blood 
-flow imaging and three-dimensional reconstruction techniques.
+Across all keywords, words like "myocardial," "perfusion," and "quantification" appear frequently, which shows us the main focus of cardiac MRI research. In "machine learning" abstracts, "myocardial" dominates by a wide margin. "Deep learning" abstracts highlight "coronary" and "strain" quite prominently, which points to a focus on coronary artery imaging and cardiac motion analysis."Artificial intelligence" abstracts focus on "lv" (left ventricle) and "ventricular" function, so AI is might be most often applied to measuring heart chamber performance."Convolution" abstracts stand out with focusing mainly on "perfusion" and "3d" which appear frequently, indicating a focus on blood flow imaging.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
@@ -233,11 +214,7 @@ flow imaging and three-dimensional reconstruction techniques.
 #| fig.width: 10
 #| fig.height: 8
 
-remove_bigram_words <- c("cmr", "cardiovascular", "magnetic", "resonance", 
-                          "imaging", "images", "mri", "image", "cardiac",
-                          "learning", "flow", "lge", "dl", "jcmr", 
-                          "articles", "pool", "stimulated", "echoes",
-                          "rtof", "pc", "af")
+remove_bigram_words <- c("cmr", "cardiovascular", "magnetic", "resonance", "imaging", "images", "mri", "image", "cardiac", "learning", "flow", "lge", "dl", "jcmr", "articles", "pool", "stimulated", "echoes", "rtof", "pc", "af")
 
 abstract_bigram_clean <- jcmr |>
   filter(!is.na(abstract)) |>
@@ -256,17 +233,24 @@ bigram_graph <- abstract_bigram_clean |>
   graph_from_data_frame()
 
 ggraph(bigram_graph, layout = "fr") +
-  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, 
-                 color = "seagreen", arrow = arrow(length = unit(3, "mm"))) +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, color = "seagreen", arrow = arrow(length = unit(3, "mm"))) +
   geom_node_point(color = "cornflowerblue", size = 4) +
-  geom_node_text(aes(label = name), repel = TRUE, size = 3.5, 
-                 color = "black") +
+  geom_node_text(aes(label = name), repel = TRUE, size = 3.5, color = "black") +
   theme_void() +
   labs(title = "Network of Most Common Word Pairs in Abstracts")
 ```
 :::
 
-add text here willemijn
+Each line between two words means they appeared next to each other frequently in the abstracts, so the stronger the connection, the more often that pair showed up together.
+
+The biggest cluster on the right tells us that "myocardial" connects to "perfusion," "fibrosis," "blood," and "t1". These are main things researchers are trying 
+to measure in the heart muscle using AI.
+
+On the bottom left, "ventricular" branches out to "lv," "rv," "left," and "filling" which are all different ways of describing and measuring the heart's chambers.
+
+"Coronary" links to "artery" and "angiography," showing that imaging the coronary arteries is potentially its own distinct research thread separate from the heart muscle work happening on the other side of the graph.
+
+Isolated pairs like "gadolinium → enhancement" and "ejection -> fraction" are well-known clinical terms that always appear together.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
@@ -295,30 +279,20 @@ jcmr |>
   ggplot(aes(area = n, fill = n, label = word)) +
   geom_treemap() +
   geom_treemap_text(color = "white", place = "centre", grow = TRUE) +
-  scale_fill_gradient(low = "#6EAB8A", high = "#1a3d2b") +
+  scale_fill_gradient(low = "seagreen", high = "darkgreen") +
   labs(title = "Most Frequent Words Across All Abstracts") +
   theme(legend.position = "none",
         plot.title = element_text(face = "bold", size = 14))
 ```
 :::
 
-Looking across all abstracts, a few terms rise to the top —
-"myocardial," "heart," and "perfusion" are the biggest boxes,
-reflecting the core focus of cardiac MRI research.
+Looking across all of the abstracts, a few terms such as "myocardial," "heart," and "perfusion" come up as the biggest boxes, which shows us the main focus of cardiac MRI research.
 
-"3d," "4d," and "strain" appear prominently, showing that
-dimensional imaging and motion tracking are central techniques
-in how researchers are applying AI to the heart.
+"3d," "4d," and "strain" appear prominently, showing that dimensional imaging and motion tracking are very important techniques in how researchers are applying AI to the heart.
 
-Smaller but meaningful terms like "segmentation," "mapping,"
-and "t1" point to the specific clinical tasks AI is being
-trained to automate — outlining structures, measuring tissue
-properties, and tracking blood flow.
+Smaller terms like "segmentation," "mapping," and "t1" point to the specific clinical tasks AI is being trained to automate such as outlining structures, measuring tissue properties, and tracking blood flow.
 
-"lv" (left ventricle) and "rv" (right ventricle) stand out
-as the most studied cardiac structures, which makes sense —
-measuring how well the heart pumps is the most fundamental
-question in cardiology.
+"lv" (left ventricle) and "rv" (right ventricle) stand out as the most studied cardiac structures, since measuring how well the heart pumps is the most important variable to consider in cardiac research. 
 ::::
 
 ::::{.cr-section layout="sidebar-right"}

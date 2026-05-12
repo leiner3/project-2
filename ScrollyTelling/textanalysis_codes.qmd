@@ -29,7 +29,7 @@ jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 
 cmr_stopword <- c("study", "scientific", "high", "study", "increased", "induced", "levels", "expression", "potential", "treatment", "related", "significantly", "accumulation", "showed", "related", "specific", "yrs", "age", "effect", "effects", "results", "analysis", "revealed", "human", "1", "2", "3", "group", "formation", "reduced", "function", "decreased", "model", "fat", "compared", "based", "size", "size", "stability", "assessment", "method", "clinical", "activity", "findings", "mechanisms", "energy", "exposure", "content", "properties", "development", "higher", "metabolic", "disease", "red", "white", "recovery", "cellular", "additional", "simultaneously", "emulsion", "molecular", "identified", "compounds", "composition", "mature", "site", "extracts", "significant", "including", "dependent", "independent", "patients", "background", "objectives", "recent", "studies", "information")
 
-lexicon <-  rep("custom", times = length(word))
+lexicon <-  rep("custom", times = length(cmr_stopword))
 
 # Create a dataframe from the two vectors above
 full_stopwords <- data.frame(cmr_stopword, lexicon)
