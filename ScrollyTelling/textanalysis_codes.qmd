@@ -18,7 +18,7 @@ library(tidytext)
 library(textdata)
 library(igraph)
 library(ggraph)
-library(gganimate)
+library(magick)
 
 jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 ```
@@ -27,7 +27,7 @@ jcmr <- read_csv("~/project-2/clean_jcmr.csv")
 #| include: false
 # Adding specific stopwords. Here, we insert the "general" words, that we can  expect from any scientific article about CMR and fluff words that we would expect from any science journals (study, analysis, treatment, human, mechanisms, mode, findings, function, etc).
 
-cmr_stopword <- c("study", "scientific", "high", "study", "increased", "induced", "levels", "expression", "potential", "treatment", "related", "significantly", "accumulation", "showed", "related", "specific", "yrs", "age", "effect", "effects", "results", "analysis", "revealed", "human", "1", "2", "3", "group", "formation", "reduced", "function", "decreased", "model", "fat", "compared", "based", "size", "size", "stability", "assessment", "method", "clinical", "activity", "findings", "mechanisms", "energy", "exposure", "content", "properties", "development", "higher", "metabolic", "disease", "red", "white", "recovery", "cellular", "additional", "simultaneously", "emulsion", "molecular", "identified", "compounds", "composition", "mature", "site", "extracts", "significant", "including", "dependent", "independent", "patients", "background", "objectives", "recent", "studies", "information")
+cmr_stopword <- c("study", "scientific", "high", "study", "increased", "induced", "levels", "expression", "potential", "treatment", "publishing", "related", "significantly", "accumulation", "showed", "related", "specific", "yrs", "age", "effect", "effects", "results", "analysis", "revealed", "human", "1", "2", "3", "group", "formation", "reduced", "function", "decreased", "model", "fat", "compared", "based", "size", "size", "stability", "assessment", "method", "clinical", "activity", "findings", "mechanisms", "energy", "exposure", "content", "properties", "development", "higher", "metabolic", "disease", "red", "white", "recovery", "cellular", "additional", "simultaneously", "emulsion", "molecular", "identified", "compounds", "composition", "mature", "site", "extracts", "significant", "including", "dependent", "independent", "patients", "background", "objectives", "recent", "studies", "information")
 
 lexicon <-  rep("custom", times = length(cmr_stopword))
 
@@ -37,61 +37,257 @@ names(full_stopwords) <- c("word", "lexicon")
 
 # Add the dataframe to stop_words df that exists in the library stopwords
 stop_words_fix <-  dplyr::bind_rows(stop_words, full_stopwords)
-view(stop_words_fix)
 
 # For filtering (specifically) individual words
-remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "accuracy"
+remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach"
 )
 
-# For replacing phrases into one word
+# UNIGRAM: Replacing phrases into one word
+replace_unigram <- c(
+  "cardiovascular magnetic resonance" = "cmr",
+  "magnetic resonance imaging" = "mri",
+  "magnetic resonance angiography" = "mra",
+  "dice similarity coefficient" = "dsc",
+  "late gadolinium enhancement" = "lge",
+  "computed tomography" = "ct",
+  "four dimensional" = "4d",
+  "three dimensional" = "3d",
+  "left ventricular" = "lv",
+  "left ventricule" = "lv",
+  "right ventricule" = "rv",
+  "deep learning" = "dl",
+  "artificial intelligence" = "ai",
+  "machine learning" = "ml",
+  "positron emission tomography" = "pet",
+  "interclass correlation coefficient" = "icc")
+
+# BIGRAM:
 replace_dict <- c(
   "cardiovascular magnetic resonance" = "cmr",
   "magnetic resonance imaging" = "mri",
-  "computed tomography" = "ct",
+  "magnetic resonance angiography" = "mra",
   "dice similarity coefficient" = "dsc",
-  "late gadolinium enhancement" = "lge"
-)
+  "late gadolinium enhancement" = "lge",
+  "interclass correlation coefficient" = "icc")
+
+# TRIGRAM:
+
+remove_words <- c("mra", "mri", "cmr", "mbf", "lge", "lv", "dl", "lf", "la", "pc", "rv", "ai", "af", "cardiovascular", "wss", "dti","jcmr", "pet", "papers", "special")
+filter_grams <- c(stop_words_fix$word, remove_words)
 ```
+
+unigram: make a replace_phrases list.
+we would love to have mri..mra.. lge.. dsc... icc
+
+bigram: make a replace_phrases list: 4d... 3d...
+potentially make a remove_words list that have 3 words combination. THAT WE ALREADY KNOW!
+because we do not want "magnetic resonance" "cardiovascular magnetic", etc... bruh
+
+trigram: make a remove_word list that will filter out one word abbreviation!
+
 
 ```{r}
 # Finding most frequent (individual) words based on abstract
 # Please update stop word list accordingly
 
-clean_jcmr |>
+unigram_plot <- clean_jcmr |>
   select(abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_unigram)) |>
   unnest_tokens(output = word, input = abstract) |>
   anti_join(stop_words_fix) |>
   count(word, sort = TRUE) |>
   filter(word != "NA") |>
-  filter(!word %in% c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "accuracy")) |>
-  slice_max(n, n = 30) |>
-  ggplot(aes(fct_reorder(word, n), n)) +
-  geom_col() +
-  coord_flip()
+  filter(!word %in% c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "time", "measurements", "parameters", "single")) |>
+  slice_max(n, n = 20, with_ties = FALSE)
+
+p_uni <- unigram_plot |>
+  ggplot(aes(reorder(word, n), n, fill = word)) +
+  geom_col(width = 0.6, alpha = 0.9, show.legend = FALSE) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Most Frequent Words in Abstract",
+       x = "Frequency", 
+       y = "Unigram") +
+   theme_minimal(base_size = 15) +
+    theme(plot.title.position = "plot",
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(color = alpha("white", 0.15),
+                                            linewidth = 0.3
+      ))
 
 abstract_bigram <- clean_jcmr |>
+  select(abstract) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_dict)) |>
   unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
   filter(bigram != "NA") |>
   filter(!str_detect(bigram, "^\\d")) |>
   count(bigram, sort = TRUE) |>
   separate(bigram, c("word1", "word2"), sep = " ") |>
-  filter(!word1 %in% stop_words_fix$word,
-         !word2 %in% stop_words_fix$word) |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams) |>
   filter(!is.na(word1) & !is.na(word2)) |>
-  unite(bigram, word1, word2, sep = " ")
+  unite(bigram, word1, word2, sep = " ") |> 
+  slice_max(n, n = 20, with_ties = FALSE)
+  
+bigram_plot <- abstract_bigram |>
+  ggplot(aes(reorder(bigram, n), n, fill = bigram)) +
+  geom_col(width = 0.6, alpha = 0.9, show.legend = FALSE) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Most Frequent Two Words Combination in Abstract",
+       x = "Frequency", 
+       y = "Bigram") +
+   theme_minimal(base_size = 15) +
+    theme(
+      plot.title.position = "plot",
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(
+        color = alpha("white", 0.15),
+        linewidth = 0.3
+      ))
 
 abstract_trigram <- clean_jcmr |>
-  unnest_tokens(bigram, abstract, token = "ngrams", n = 3) |>
+  select(abstract) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  unnest_tokens(trigram, abstract, token = "ngrams", n = 3) |>
+  filter(trigram != "NA") |>
+  filter(!str_detect(trigram, "^\\d")) |>
+  count(trigram, sort = TRUE) |>
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams,
+         !word3 %in% filter_grams) |>
+  filter(!is.na(word1) & !is.na(word2) & !is.na(word3)) |>
+  unite(trigram, word1, word2, word3, sep = " ") |>
+  slice_max(n, n = 20, with_ties = FALSE)
+
+trigram_plot <- abstract_trigram |>
+  ggplot(aes(reorder(trigram, n), n, fill = trigram)) +
+  geom_col(width = 0.6, alpha = 0.9, show.legend = FALSE) +
+  coord_flip(clip = "off") +
+   scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_minimal() +
+  labs(title = "Most Frequent Three Words Combination in Abstract",
+       x = "Frequency", 
+       y = "Trigram") +
+   theme_minimal(base_size = 15) +
+    theme(
+      plot.title.position = "plot",
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(
+        color = alpha("white", 0.15),
+        linewidth = 0.3
+      ))
+
+ggsave("uni.png", p_uni, width = 16, height = 6, dpi = 300, bg = "#fdfbf7")
+ggsave("bi.png", bigram_plot, width = 8, height = 6, dpi = 300, bg = "#fdfbf7")
+ggsave("tri.png", trigram_plot, width = 8, height = 6, dpi = 300, bg = "#fdfbf7")
+
+imgs <- image_read(c(
+  "uni.png",
+  "bi.png",
+  "tri.png"
+))
+
+gif <- imgs |>
+  image_morph(frames = 12) |>
+  image_animate(fps = 2)
+
+image_write(
+  gif,
+  "ngrams.gif"
+)
+```
+
+
+```{r}
+unigram_plot <- clean_jcmr |>
+  select(abstract) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_unigram)) |>
+  unnest_tokens(output = word, input = abstract) |>
+  anti_join(stop_words_fix) |>
+  count(word, sort = TRUE) |>
+  filter(word != "NA") |>
+  filter(!word %in% c("cmr", "cardiovascular", "data", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "time", "measurements", "parameters", "single")) |>
+  slice_max(n, n = 20, with_ties = FALSE) |>
+  mutate(type = "Unigram") |>
+  rename("term" = word)
+
+abstract_bigram <- clean_jcmr |>
+  select(abstract) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_dict)) |>
+  unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
   filter(bigram != "NA") |>
   filter(!str_detect(bigram, "^\\d")) |>
   count(bigram, sort = TRUE) |>
-  separate(bigram, c("word1", "word2", "word3"), sep = " ") |>
-  filter(!word1 %in% stop_words_fix$word,
-         !word2 %in% stop_words_fix$word,
-         !word3 %in% stop_words_fix$word) |>
+  separate(bigram, c("word1", "word2"), sep = " ") |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams) |>
+  filter(!is.na(word1) & !is.na(word2)) |>
+  unite(bigram, word1, word2, sep = " ")
+
+bigram_plot <- abstract_bigram |>
+  slice_max(n, n = 20, with_ties = FALSE) |>
+  mutate(type = "Bigram") |>
+  rename("term" = bigram)
+
+abstract_trigram <- clean_jcmr |>
+  select(abstract) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  unnest_tokens(trigram, abstract, token = "ngrams", n = 3) |>
+  filter(trigram != "NA") |>
+  filter(!str_detect(trigram, "^\\d")) |>
+  count(trigram, sort = TRUE) |>
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams,
+         !word3 %in% filter_grams) |>
   filter(!is.na(word1) & !is.na(word2) & !is.na(word3)) |>
-  unite(bigram, word1, word2, word3, sep = " ")
+  unite(trigram, word1, word2, word3, sep = " ")
+
+trigram_plot <- abstract_trigram |>
+  slice_max(n, n = 20, with_ties = FALSE) |>
+  mutate(type = "Trigram") |>
+  rename("term" = trigram)
+
+ngram_plot <- bind_rows(
+  unigram_plot,
+  bigram_plot,
+  trigram_plot
+)
+
+ngram_plot <- ngram_plot |>
+  group_by(type) |>
+  arrange(desc(n), .by_group = TRUE) |>
+  mutate(rank = row_number())
+
+p <- ggplot(
+  subset(ngram_plot, type == unique(type)[1]),
+  aes(
+    x = reorder(term, n),
+    y = n,
+    fill = term
+  )
+) +
+  geom_col(show.legend = FALSE) +
+  coord_flip()
+
+
 ```
 
 
@@ -214,7 +410,7 @@ we would love to have mri..mra.. lge.. dsc... icc
 
 
 bigram: make a replace_phrases list: 4d... 3d...
-potentially make a remove_words list that have 3 words combination. 
+potentially make a remove_words list that have 3 words combination. THAT WE ALREADY KNOW!
 because we do not want "magnetic resonance" "cardiovascular magnetic", etc... bruh
 
 trigram: make a remove_word list that will filter out one word abbreviation!

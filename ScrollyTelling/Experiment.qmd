@@ -25,9 +25,13 @@ library(tidytext)
 library(textdata)
 library(igraph)
 library(ggraph)
+library(gganimate)
 library(treemapify)
+library(threejs)
+library(htmlwidgets)
+library(visNetwork)
 
-jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 ::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
@@ -96,13 +100,18 @@ We want to highlight the growing role of AI and Machine Learning in the developm
 #| fig.height: 6
 
 jcmr_yearly <- jcmr |>
-  mutate(year = year(date)) |>
+  mutate(date = as.Date(date),
+         year = lubridate::year(date)) |>
   filter(!is.na(keyword), !is.na(year)) |>
   group_by(year, keyword) |>
   summarise(n = n(), .groups = "drop")
 
-ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
-  geom_line(linewidth = 1.2) +
+
+lineplot <- ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
+  geom_point(aes(group = seq_along(year)),
+             size = 4,
+             alpha = 0.7) +
+  geom_line(aes(lty = keyword), linewidth = 1.2, show.legend = FALSE) +
   geom_point(size = 2) +
   scale_color_manual(values = c(
     "machine learning" = "seagreen",
@@ -118,9 +127,17 @@ ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    legend.position = "bottom",
-    plot.title = element_text(face = "bold")
+  plot.background = element_rect(fill = "#fdfbf7", color = NA),
+  panel.background = element_rect(fill = "#fdfbf7", color = NA),
+  panel.grid.major.y = element_blank(),
+  panel.grid.minor = element_blank(),
+  text = element_text(color = "black"),
+  legend.position = "bottom",
+  plot.title = element_text(face = "bold")
   )
+
+lineplot +
+  transition_reveal(along = year) 
 ```
 :::
 
@@ -132,9 +149,9 @@ After 2020, all four keywords were appearing at way higher rates.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
-@cr-barchart
+@cr-barchart-unigram
 
-:::{#cr-barchart}
+:::{#cr-barchart-unigram}
 ```{r}
 #| echo: false
 #| message: false
@@ -202,6 +219,43 @@ jcmr |>
 
 Across all keywords, words like "myocardial," "perfusion," and "quantification" appear frequently, which shows us the main focus of cardiac MRI research. In "machine learning" abstracts, "myocardial" dominates by a wide margin. "Deep learning" abstracts highlight "coronary" and "strain" quite prominently, which points to a focus on coronary artery imaging and cardiac motion analysis."Artificial intelligence" abstracts focus on "lv" (left ventricle) and "ventricular" function, so AI is might be most often applied to measuring heart chamber performance."Convolution" abstracts stand out with focusing mainly on "perfusion" and "3d" which appear frequently, indicating a focus on blood flow imaging.
 ::::
+
+::::{.cr-section layout="sidebar-right"}
+@cr-barchart-allgram
+
+
+:::{#cr-barchart-allgram}
+
+![](bi.png){width="100%"}
+
+:::
+
+
+This is analysis 1
+This is analysis 2
+This is analysis 3
+
+::::
+
+
+
+::::{.cr-section layout="sidebar-right"}
+@cr-barchart-trigram
+
+
+:::{#cr-barchart-trigram}
+
+![](tri.png){width="100%"}
+
+:::
+
+
+This is analysis 1
+This is analysis 2
+This is analysis 3
+
+::::
+
 
 ::::{.cr-section layout="sidebar-right"}
 @cr-network
