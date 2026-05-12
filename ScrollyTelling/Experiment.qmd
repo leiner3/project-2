@@ -129,6 +129,8 @@ lineplot <- ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
   theme(
   plot.background = element_rect(fill = "#fdfbf7", color = NA),
   panel.background = element_rect(fill = "#fdfbf7", color = NA),
+  panel.grid.major.y = element_blank(),
+  panel.grid.minor = element_blank(),
   text = element_text(color = "black"),
   legend.position = "bottom",
   plot.title = element_text(face = "bold")
@@ -243,7 +245,7 @@ flow imaging and three-dimensional reconstruction techniques.
 
 :::{#cr-barchart-allgram}
 
-![](ngrams.gif){width="100%"}
+![](bi.png){width="100%"}
 
 :::
 
@@ -261,9 +263,9 @@ This is analysis 3
 
 
 :::{#cr-barchart-trigram}
-```{r}
 
-```
+![](tri.png){width="100%"}
+
 :::
 
 
