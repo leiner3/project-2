@@ -15,6 +15,7 @@ format:
 #| message: false
 
 library(tidyverse)
+library(plotly)
 library(ggplot2)
 library(leaflet)
 library(patchwork)
@@ -31,7 +32,7 @@ library(threejs)
 library(htmlwidgets)
 library(visNetwork)
 
-jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 ::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
@@ -79,11 +80,9 @@ It is essential to examine how research on cardiovascular imaging methods develo
 
 By utilizing text analysis and natural language processing, we can interpret large volumes of textual data regarding design, development, manufacture, and evaluation of cardiovascular imaging technologies. 
 
-Journal of Cardiovascular Magnetic Resonance (JCMR) is a leading publication site for basic, translational, and clinical research on cardiovascular magnetic resonance (CMR) methods.
+Journal of Cardiovascular Magnetic Resonance (JCMR) is a leading publication site for basic and clinical research on cardiovascular magnetic resonance (CMR) methods.
 
-Our goal is to transform this large set of unstructured data into well‐organized, accessible, and meaningful insights. 
-
-We want to highlight the growing role of AI and Machine Learning in the development of CMR, particularly for audiences outside the research and medical imaging communities.
+Our goal is to transform this large of unstructured data into well‐organized and meaningful insights. We want to highlight the growing role of AI and Machine Learning in the development of CMR, particularly for audiences outside the research and medical imaging communities.
 
 :::
 ::::
@@ -127,8 +126,8 @@ lineplot <- ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-  plot.background = element_rect(fill = "#fdfbf7", color = NA),
-  panel.background = element_rect(fill = "#fdfbf7", color = NA),
+  plot.background = element_rect(fill = "white", color = NA),
+  panel.background = element_rect(fill = "white", color = NA),
   panel.grid.major.y = element_blank(),
   panel.grid.minor = element_blank(),
   text = element_text(color = "black"),
@@ -141,11 +140,15 @@ lineplot +
 ```
 :::
 
-Before 2017, AI-related publications in cardiac MRI were rare, except for when convolution was mentioned
+Before 2012, publications mentioning any of these keywords were pretty rare. Convolution was actually the most common term early on, which makes sense because convolutional methods in image processing predate the modern AI boom by quite a bit.
 
-Around 2017, deep learning matured and publication volume surged.
+Around 2012 to 2016, convolution peaks and then starts to drop off. This is right around the time deep learning started taking over as the dominant approach, so researchers were moving away from older convolutional methods and toward neural network based ones.
 
-After 2020, all four keywords were appearing at way higher rates.
+The really dramatic shift happens right after 2020. Machine learning shoots up faster than any other keyword, hitting over 10 articles in a single year. This is when COVID pushed a lot of medical research toward automation and AI.
+
+What is also interesting is that artificial intelligence and deep learning both start climbing steeply around the same time, but machine learning stays ahead. So even as the field got more sophisticated, researchers still preferred the broader term machine learning when describing their work rather than getting more specific.
+
+By 2023 all four keywords are appearing at much higher rates than they were even five years earlier showing how fast the field is moving. 
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
@@ -217,42 +220,212 @@ jcmr |>
 ```
 :::
 
-Across all keywords, words like "myocardial," "perfusion," and "quantification" appear frequently, which shows us the main focus of cardiac MRI research. In "machine learning" abstracts, "myocardial" dominates by a wide margin. "Deep learning" abstracts highlight "coronary" and "strain" quite prominently, which points to a focus on coronary artery imaging and cardiac motion analysis."Artificial intelligence" abstracts focus on "lv" (left ventricle) and "ventricular" function, so AI is might be most often applied to measuring heart chamber performance."Convolution" abstracts stand out with focusing mainly on "perfusion" and "3d" which appear frequently, indicating a focus on blood flow imaging.
+Across all keywords, words like "myocardial," "perfusion," and "quantification" appear frequently, which shows us the main focus of cardiac MRI research.
+
+In "machine learning" abstracts, "myocardial" dominates by a wide margin. 
+
+"Deep learning" abstracts highlight "coronary" and "strain" quite prominently, which points to a focus on coronary artery imaging and cardiac motion analysis.
+
+"Artificial intelligence" abstracts focus on "lv" (left ventricle) and "ventricular" function, so AI is might be most often applied to measuring heart chamber performance.
+
+"Convolution" abstracts stand out with focusing mainly on "perfusion" and "3d" which appear frequently, indicating a focus on blood flow imaging.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
 @cr-barchart-allgram
 
-
 :::{#cr-barchart-allgram}
 
-![](bi.png){width="100%"}
+```{r}
+# Stop words setup
+cmr_stopword <- c("study", "scientific", "high", "increased", "induced", 
+                  "levels", "expression", "potential", "treatment", "related", 
+                  "significantly", "accumulation", "showed", "specific", "yrs", 
+                  "age", "effect", "effects", "results", "analysis", "revealed", 
+                  "human", "1", "2", "3", "group", "formation", "reduced", 
+                  "function", "decreased", "model", "fat", "compared", "based", 
+                  "size", "stability", "assessment", "method", "clinical", 
+                  "activity", "findings", "mechanisms", "energy", "exposure", 
+                  "content", "properties", "development", "higher", "metabolic", 
+                  "disease", "recovery", "cellular", "significant", "including", 
+                  "dependent", "independent", "patients", "background", 
+                  "objectives", "recent", "studies", "information")
 
+full_stopwords <- data.frame(
+  word = cmr_stopword,
+  lexicon = rep("custom", times = length(cmr_stopword))
+)
+
+stop_words_fix <- dplyr::bind_rows(stop_words, full_stopwords)
+
+remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images", 
+                 "image", "imaging", "blood", "learning", "magnetic", 
+                 "resonance", "flow", "approach", "accuracy")
+
+remove_bigram_words <- c("cmr", "cardiovascular", "magnetic", "resonance", 
+                          "imaging", "images", "mri", "image", "cardiac",
+                          "learning", "flow", "lge", "dl", "jcmr", 
+                          "articles", "pool", "stimulated", "echoes",
+                          "rtof", "pc", "af")
+
+# Build clean bigrams
+abstract_bigram_clean <- jcmr |>
+  filter(!is.na(abstract)) |>
+  unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
+  filter(!str_detect(bigram, "^\\d")) |>
+  count(bigram, sort = TRUE) |>
+  separate(bigram, c("word1", "word2"), sep = " ") |>
+  filter(!word1 %in% stop_words_fix$word,
+         !word2 %in% stop_words_fix$word) |>
+  filter(!word1 %in% remove_bigram_words,
+         !word2 %in% remove_bigram_words) |>
+  filter(!is.na(word1) & !is.na(word2)) |>
+  filter(n >= 3)
+
+# Bigram descriptions
+bigram_descriptions <- tribble(
+  ~bigram,                  ~description,
+  "blood flow",             "Movement of blood through cardiac vessels",
+  "deep learning",          "AI method using layered neural networks",
+  "myocardial perfusion",   "Blood flow through heart muscle tissue",
+  "myocardial blood",       "Blood supply to the heart muscle",
+  "coronary artery",        "Main blood vessels supplying the heart",
+  "time consuming",         "Refers to slow traditional analysis methods AI aims to replace",
+  "left ventricular",       "Relating to the heart's main pumping chamber",
+  "t1 mapping",             "MRI technique measuring tissue water content",
+  "free breathing",         "MRI acquired without requiring breath holds",
+  "breath hold",            "Technique to reduce motion blur in MRI scans",
+  "artificial intelligence","Computer systems performing human-like analysis tasks",
+  "phase contrast",         "MRI technique for measuring blood flow velocity",
+  "myocardial t1",          "T1 relaxation time measured in heart muscle",
+  "myocardial fibrosis",    "Scarring of heart muscle tissue",
+  "machine learning",       "AI method that learns patterns from data",
+  "left atrial",            "Relating to the upper left chamber of the heart",
+  "filling curves",         "Measures how the heart fills with blood",
+  "ejection fraction",      "Percentage of blood pumped out per heartbeat",
+  "arterial input",         "Blood supply entering a region of tissue",
+  "atrial fibrillation",    "Irregular heartbeat affecting the upper chambers"
+)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+bigram_plot <- abstract_bigram_clean |>
+  unite(bigram, word1, word2, sep = " ") |>
+  slice_max(n, n = 20) |>
+  left_join(bigram_descriptions, by = "bigram") |>
+  mutate(
+    description = ifelse(is.na(description), "No description available", description),
+    hover_text = paste0("<b>", bigram, "</b><br>Count: ", n, "<br><i>", description, "</i>")
+  ) |>
+  ggplot(aes(x = reorder(bigram, n), y = n, fill = bigram, text = hover_text)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  labs(
+    title = "Most Frequent Two Word Combinations in Abstracts",
+    x = NULL,
+    y = "Frequency"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(plot.title = element_text(face = "bold"))
+
+ggplotly(bigram_plot, tooltip = "text")
+```
 :::
 
+"Blood flow" and "deep learning" are the two most common bigrams by a pretty wide margin. This makes a lot of sense when you think about it beacuse the whole point of most of this research is figuring out how to use AI to understand how blood moves through the heart more efficiently than before.
 
-This is analysis 1
-This is analysis 2
-This is analysis 3
+What is interesting is that "time consuming" shows up this high on the list. Researchers keep bringing it up because traditional cardiac MRI analysis required specialists to sit down and manually trace heart structures for hours. A huge part of why AI became so appealing in this field is simply that it promised to make that process way faster and less dependent on one person doing it correctly.
+
+Word pairs like "myocardial perfusion" and "coronary artery" are the core vocabulary of cardiac MRI research. These are the specific measurements doctors need to make when figuring out whether a heart is functioning properly or showing signs of disease.
+
+Hover over any bar to see what that word combination actually means.
 
 ::::
 
+```{r}
+abstract_trigram_clean <- jcmr |>
+  filter(!is.na(abstract)) |>
+  unnest_tokens(trigram, abstract, token = "ngrams", n = 3) |>
+  filter(!str_detect(trigram, "^\\d")) |>
+  count(trigram, sort = TRUE) |>
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") |>
+  filter(!word1 %in% stop_words_fix$word,
+         !word2 %in% stop_words_fix$word,
+         !word3 %in% stop_words_fix$word) |>
+  filter(!is.na(word1) & !is.na(word2) & !is.na(word3)) |>
+  unite(trigram, word1, word2, word3, sep = " ")
+
+trigram_descriptions <- tribble(
+  ~trigram,                          ~description,
+  "myocardial blood flow",           "Blood supply moving through heart muscle tissue",
+  "late gadolinium enhancement",     "MRI technique to detect scarring in the heart muscle",
+  "stimulated echoes dense",         "A specific MRI acquisition technique for motion tracking",
+  "myocardial t1 mapping",           "Measuring tissue properties of the heart muscle",
+  "magnetic resonance imaging",      "The core imaging technology this field is built on",
+  "ray coronary angiography",        "X-ray based imaging of the coronary arteries",
+  "pulmonary valve replacement",     "Surgical procedure for the heart valve to the lungs",
+  "pulmonary regurgitant volume",    "Backward blood flow through the pulmonary valve",
+  "positron emission tomography",    "Nuclear imaging technique often compared to MRI",
+  "pass perfusion imaging",          "Multi-pass technique for measuring blood flow",
+  "native t1 mapping",               "T1 mapping without contrast agent injection",
+  "magnetic resonance 4d",           "Four-dimensional MRI capturing blood flow over time",
+  "inter observer variability",      "Differences between how two clinicians read the same scan",
+  "hypertrophic cardiomyopathy hcm", "A condition where the heart muscle becomes abnormally thick",
+  "feature tracking ft",             "Technique to measure heart wall motion from MRI",
+  "diffusion tensor imaging",        "MRI technique mapping tissue fiber structure",
+  "computed tomography ct",          "X-ray based 3D imaging often compared to CMR",
+  "cine displacement encoding",      "MRI method to track heart muscle movement frame by frame",
+  "cardiac shape modeling",          "Using AI to build 3D models of heart geometry",
+  "breath hold acquisitions",        "MRI scans taken while the patient holds their breath"
+)
+```
 
 
 ::::{.cr-section layout="sidebar-right"}
 @cr-barchart-trigram
 
-
 :::{#cr-barchart-trigram}
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
 
-![](tri.png){width="100%"}
+trigram_plot <- abstract_trigram_clean |>
+  slice_max(n, n = 20) |>
+  left_join(trigram_descriptions, by = "trigram") |>
+  mutate(
+    description = ifelse(is.na(description), "No description available", description),
+    hover_text = paste0("<b>", trigram, "</b><br>Count: ", n, "<br><i>", description, "</i>")
+  ) |>
+  ggplot(aes(x = reorder(trigram, n), y = n, fill = trigram, text = hover_text)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_fill_viridis_d() +
+  labs(
+    title = "Most Frequent Three Word Combinations in Abstracts",
+    x = NULL,
+    y = "Frequency"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(plot.title = element_text(face = "bold"))
+
+ggplotly(trigram_plot, tooltip = "text")
+```
 
 :::
 
+"Myocardial blood flow" is so far ahead of everything else on this chart that it basically summarizes what most of this research is about. At the end of the day, the most important question in cardiology is whether enough blood is reaching the heart muscle, and a huge portion of the AI research in JCMR is trying to measure that more accurately and automatically.
 
-This is analysis 1
-This is analysis 2
-This is analysis 3
+"Late gadolinium enhancement" in second makes a lot of sense too. It is one of the oldest and most established MRI techniques for detecting scarring and damage in the heart, so it comes up constantly as a reference point that newer AI methods are trying to match or improve on.
+
+One of the more interesting phrases lower down the list is "inter observer variability." This refers to the problem of two doctors looking at the exact same scan and coming up with different measurements. It is a well known issue in radiology and it is exactly the kind of inconsistency that AI is well suited to reduce, since a model will always give the same answer for the same input.
+
+Hover over any bar to see a plain English explanation of what each three word phrase means in the context of cardiac MRI research.
 
 ::::
 
@@ -302,9 +475,9 @@ to measure in the heart muscle using AI.
 
 On the bottom left, "ventricular" branches out to "lv," "rv," "left," and "filling" which are all different ways of describing and measuring the heart's chambers.
 
-"Coronary" links to "artery" and "angiography," showing that imaging the coronary arteries is potentially its own distinct research thread separate from the heart muscle work happening on the other side of the graph.
+"Coronary" links to "artery" and "angiography," so imaging the coronary arteries is potentially its own distinct research thread separate from the heart muscle work happening on the other side of the graph.
 
-Isolated pairs like "gadolinium → enhancement" and "ejection -> fraction" are well-known clinical terms that always appear together.
+Isolated pairs like "gadolinium enhancement" and "ejection fraction" are well-known clinical terms that always appear together.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
@@ -315,12 +488,11 @@ Isolated pairs like "gadolinium → enhancement" and "ejection -> fraction" are 
 #| echo: false
 #| message: false
 #| warning: false
-#| fig.width: 10
-#| fig.height: 8
 
-library(treemapify)
+library(plotly)
 
-jcmr |>
+
+treemap_data <- jcmr |>
   filter(!is.na(abstract)) |>
   mutate(abstract = str_to_lower(abstract)) |>
   unnest_tokens(output = word, input = abstract) |>
@@ -329,24 +501,24 @@ jcmr |>
   filter(!word %in% remove_bigram_words) |>
   filter(word != "NA") |>
   count(word, sort = TRUE) |>
-  slice_max(n, n = 30) |>
-  ggplot(aes(area = n, fill = n, label = word)) +
-  geom_treemap() +
-  geom_treemap_text(color = "white", place = "centre", grow = TRUE) +
-  scale_fill_gradient(low = "seagreen", high = "darkgreen") +
-  labs(title = "Most Frequent Words Across All Abstracts") +
-  theme(legend.position = "none",
-        plot.title = element_text(face = "bold", size = 14))
+  slice_max(n, n = 30)
+
+plot_ly(
+  data = treemap_data,
+  type = "treemap",
+  labels = ~word,
+  values = ~n,
+  parents = ""
+)
 ```
 :::
 
-Looking across all of the abstracts, a few terms such as "myocardial," "heart," and "perfusion" come up as the biggest boxes, which shows us the main focus of cardiac MRI research.
+When you look across all of the abstracts together, "myocardial," "heart," and "perfusion" take up the most space. This makes sense because most of this research comes down to one question if the heart is receiving enough blood. 
 
-"3d," "4d," and "strain" appear prominently, showing that dimensional imaging and motion tracking are very important techniques in how researchers are applying AI to the heart.
+"Segmentation," "strain," and "mapping" are some of the more interesting mid-sized boxes because these are the specific tasks AI is actually being used to automate. Segmentation means tracing the outline of the heart in an image, strain means measuring how much the heart wall moves, and mapping means creating a picture of tissue properties across the whole heart.
 
-Smaller terms like "segmentation," "mapping," and "t1" point to the specific clinical tasks AI is being trained to automate such as outlining structures, measuring tissue properties, and tracking blood flow.
+"3d," "4d," and "automated" showing up this prominently tells you about where the field is headed, since more research is aimed to happen automatically in three and four dimensions, which is a complex process in which AI is being included. 
 
-"lv" (left ventricle) and "rv" (right ventricle) stand out as the most studied cardiac structures, since measuring how well the heart pumps is the most important variable to consider in cardiac research. 
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
