@@ -26,13 +26,15 @@ library(tidytext)
 library(textdata)
 library(igraph)
 library(ggraph)
+library(networkD3)
+library(network)
 library(gganimate)
 library(treemapify)
 library(threejs)
 library(htmlwidgets)
 library(visNetwork)
 
-jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 ::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
@@ -96,7 +98,9 @@ Our goal is to transform this large of unstructured data into well‐organized a
 #| message: false
 #| warning: false
 #| fig.width: 10
-#| fig.height: 6
+#| fig.height: 8
+#| fig-align: center
+#| fig-dpi: 300
 
 jcmr_yearly <- jcmr |>
   mutate(date = as.Date(date),
@@ -126,8 +130,8 @@ lineplot <- ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-  plot.background = element_rect(fill = "white", color = NA),
-  panel.background = element_rect(fill = "white", color = NA),
+  plot.background = element_rect(fill = "#fdfbf7", color = NA),
+  panel.background = element_rect(fill = "#fdfbf7", color = NA),
   panel.grid.major.y = element_blank(),
   panel.grid.minor = element_blank(),
   text = element_text(color = "black"),
@@ -187,17 +191,38 @@ remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images",
                  "image", "imaging", "blood", "learning", "magnetic", 
                  "resonance", "flow", "approach", "accuracy")
 
+# UNIGRAM: Replacing phrases into one word
+replace_unigram <- c(
+  "cardiovascular magnetic resonance" = "cmr",
+  "magnetic resonance imaging" = "mri",
+  "magnetic resonance angiography" = "mra",
+  "dice similarity coefficient" = "dsc",
+  "late gadolinium enhancement" = "lge",
+  "computed tomography" = "ct",
+  "four dimensional" = "4d",
+  "three dimensional" = "3d",
+  "left ventricular" = "lv",
+  "left ventricule" = "lv",
+  "right ventricule" = "rv",
+  "deep learning" = "dl",
+  "artificial intelligence" = "ai",
+  "machine learning" = "ml",
+  "positron emission tomography" = "pet",
+  "interclass correlation coefficient" = "icc")
+
 jcmr |>
   filter(!is.na(abstract)) |>
   select(keyword, abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_unigram)) |>
   unnest_tokens(output = word, input = abstract) |>
   anti_join(stop_words_fix, by = "word") |>
   filter(!word %in% remove_word) |>
   filter(word != "NA") |>
+  filter(!word %in% c("cmr", "cardiovascular", "data", "free", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "heart", "jcmr", "aimed", "multi", "methods", "left", "cardiac", "time", "measurements", "parameters", "single")) |>
   count(keyword, word, sort = TRUE) |>
   group_by(keyword) |>
-  slice_max(n, n = 10) |>
+  slice_max(n, n = 15, with_ties = FALSE) |>
   ungroup() |>
   ggplot(aes(x = reorder_within(word, n, keyword), y = n, fill = keyword)) +
   geom_col(show.legend = FALSE) +
@@ -215,8 +240,14 @@ jcmr |>
     x = NULL,
     y = "Count"
   ) +
-  theme_minimal(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"))
+   theme_minimal(base_size = 15) +
+    theme(plot.title.position = "plot",
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(color = alpha("white", 0.15),
+                                            linewidth = 0.3))
 ```
 :::
 
@@ -258,29 +289,34 @@ full_stopwords <- data.frame(
 
 stop_words_fix <- dplyr::bind_rows(stop_words, full_stopwords)
 
-remove_word <- c("cmr", "cardiovascular", "data", "contrast", "images", 
-                 "image", "imaging", "blood", "learning", "magnetic", 
-                 "resonance", "flow", "approach", "accuracy")
+remove_words <- c("mra", "mri", "cmr", "mbf", "lge", "lv", "dl", "lf", "la", "pc", "rv", "ai", "af", "cardiovascular", "wss", "dti","jcmr", "pet", "papers", "special")
+filter_grams <- c(stop_words_fix$word, remove_words)
 
-remove_bigram_words <- c("cmr", "cardiovascular", "magnetic", "resonance", 
-                          "imaging", "images", "mri", "image", "cardiac",
-                          "learning", "flow", "lge", "dl", "jcmr", 
-                          "articles", "pool", "stimulated", "echoes",
-                          "rtof", "pc", "af")
+# BIGRAM:
+replace_dict <- c(
+  "cardiovascular magnetic resonance" = "cmr",
+  "magnetic resonance imaging" = "mri",
+  "magnetic resonance angiography" = "mra",
+  "dice similarity coefficient" = "dsc",
+  "late gadolinium enhancement" = "lge",
+  "interclass correlation coefficient" = "icc")
 
 # Build clean bigrams
 abstract_bigram_clean <- jcmr |>
+  select(abstract) |>
   filter(!is.na(abstract)) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_dict)) |>
   unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
   filter(!str_detect(bigram, "^\\d")) |>
   count(bigram, sort = TRUE) |>
   separate(bigram, c("word1", "word2"), sep = " ") |>
-  filter(!word1 %in% stop_words_fix$word,
-         !word2 %in% stop_words_fix$word) |>
-  filter(!word1 %in% remove_bigram_words,
-         !word2 %in% remove_bigram_words) |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams) |>
   filter(!is.na(word1) & !is.na(word2)) |>
-  filter(n >= 3)
+  filter(n >= 3) |>
+  unite(bigram, word1, word2, sep = " ") |>
+  slice_max(n, n = 20, with_ties = FALSE)
 
 # Bigram descriptions
 bigram_descriptions <- tribble(
@@ -312,10 +348,12 @@ bigram_descriptions <- tribble(
 #| echo: false
 #| message: false
 #| warning: false
+#| fig-width: 10
+#| fig-height: 8
+#| fig-align: center
+#| fig-dpi: 300
 
 bigram_plot <- abstract_bigram_clean |>
-  unite(bigram, word1, word2, sep = " ") |>
-  slice_max(n, n = 20) |>
   left_join(bigram_descriptions, by = "bigram") |>
   mutate(
     description = ifelse(is.na(description), "No description available", description),
@@ -330,8 +368,18 @@ bigram_plot <- abstract_bigram_clean |>
     x = NULL,
     y = "Frequency"
   ) +
-  theme_minimal(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"))
+  theme_minimal(base_size = 15) +
+  theme(
+      plot.title.position = "left",
+      plot.title = element_text(hjust = 0.5),
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(
+        color = alpha("white", 0.15),
+        linewidth = 0.3
+      ))
 
 ggplotly(bigram_plot, tooltip = "text")
 ```
@@ -349,16 +397,19 @@ Hover over any bar to see what that word combination actually means.
 
 ```{r}
 abstract_trigram_clean <- jcmr |>
+  select(abstract) |>
   filter(!is.na(abstract)) |>
+  mutate(abstract = str_to_lower(abstract)) |>
   unnest_tokens(trigram, abstract, token = "ngrams", n = 3) |>
   filter(!str_detect(trigram, "^\\d")) |>
   count(trigram, sort = TRUE) |>
   separate(trigram, c("word1", "word2", "word3"), sep = " ") |>
-  filter(!word1 %in% stop_words_fix$word,
-         !word2 %in% stop_words_fix$word,
-         !word3 %in% stop_words_fix$word) |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams,
+         !word3 %in% filter_grams) |>
   filter(!is.na(word1) & !is.na(word2) & !is.na(word3)) |>
-  unite(trigram, word1, word2, word3, sep = " ")
+  unite(trigram, word1, word2, word3, sep = " ") |>
+  slice_max(n, n = 20, with_ties = FALSE)
 
 trigram_descriptions <- tribble(
   ~trigram,                          ~description,
@@ -394,9 +445,12 @@ trigram_descriptions <- tribble(
 #| echo: false
 #| message: false
 #| warning: false
+#| fig-width: 10
+#| fig-height: 8
+#| fig-align: center
+#| fig-dpi: 300
 
 trigram_plot <- abstract_trigram_clean |>
-  slice_max(n, n = 20) |>
   left_join(trigram_descriptions, by = "trigram") |>
   mutate(
     description = ifelse(is.na(description), "No description available", description),
@@ -411,8 +465,18 @@ trigram_plot <- abstract_trigram_clean |>
     x = NULL,
     y = "Frequency"
   ) +
-  theme_minimal(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"))
+  theme_minimal(base_size = 15) +
+  theme(
+      plot.title.position = "left",
+      plot.title = element_text(hjust = 0.5),
+      plot.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.background = element_rect(fill = "#fdfbf7", color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_line(
+        color = alpha("white", 0.15),
+        linewidth = 0.3
+      ))
 
 ggplotly(trigram_plot, tooltip = "text")
 ```
@@ -441,30 +505,37 @@ Hover over any bar to see a plain English explanation of what each three word ph
 #| fig.width: 10
 #| fig.height: 8
 
-remove_bigram_words <- c("cmr", "cardiovascular", "magnetic", "resonance", "imaging", "images", "mri", "image", "cardiac", "learning", "flow", "lge", "dl", "jcmr", "articles", "pool", "stimulated", "echoes", "rtof", "pc", "af")
-
 abstract_bigram_clean <- jcmr |>
+  select(abstract) |>
   filter(!is.na(abstract)) |>
+  mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_dict)) |>
   unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
   filter(!str_detect(bigram, "^\\d")) |>
   count(bigram, sort = TRUE) |>
   separate(bigram, c("word1", "word2"), sep = " ") |>
-  filter(!word1 %in% stop_words_fix$word,
-         !word2 %in% stop_words_fix$word) |>
-  filter(!word1 %in% remove_bigram_words,
-         !word2 %in% remove_bigram_words) |>
+  filter(!word1 %in% filter_grams,
+         !word2 %in% filter_grams) |>
   filter(!is.na(word1) & !is.na(word2)) |>
   filter(n >= 3)
 
-bigram_graph <- abstract_bigram_clean |>
-  graph_from_data_frame()
 
-ggraph(bigram_graph, layout = "fr") +
-  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, color = "seagreen", arrow = arrow(length = unit(3, "mm"))) +
-  geom_node_point(color = "cornflowerblue", size = 4) +
-  geom_node_text(aes(label = name), repel = TRUE, size = 3.5, color = "black") +
-  theme_void() +
-  labs(title = "Network of Most Common Word Pairs in Abstracts")
+pro <- abstract_bigram_clean |>
+  select(word1, word2)
+
+simpleNetwork(pro, height="100px", width="100px",        
+        Source = 1,                 # column number of source
+        Target = 2,                 # column number of target
+        linkDistance = 10,          # distance between node. Increase this value to have more space between nodes
+        charge = -5,              
+        fontSize = 20,               # size of the node names
+        fontFamily = "serif",       # font og node names
+        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
+        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
+        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
+        zoom = T                    # Can you zoom on the figure?
+        )
+
 ```
 :::
 

@@ -90,7 +90,7 @@ trigram: make a remove_word list that will filter out one word abbreviation!
 # Finding most frequent (individual) words based on abstract
 # Please update stop word list accordingly
 
-unigram_plot <- clean_jcmr |>
+unigram_plot <- jcmr |>
   select(abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
   mutate(abstract = str_replace_all(abstract, replace_unigram)) |>
@@ -119,7 +119,7 @@ p_uni <- unigram_plot |>
                                             linewidth = 0.3
       ))
 
-abstract_bigram <- clean_jcmr |>
+abstract_bigram <- jcmr |>
   select(abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
   mutate(abstract = str_replace_all(abstract, replace_dict)) |>
@@ -154,7 +154,7 @@ bigram_plot <- abstract_bigram |>
         linewidth = 0.3
       ))
 
-abstract_trigram <- clean_jcmr |>
+abstract_trigram <- jcmr |>
   select(abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
   unnest_tokens(trigram, abstract, token = "ngrams", n = 3) |>
@@ -183,6 +183,7 @@ trigram_plot <- abstract_trigram |>
    theme_minimal(base_size = 15) +
     theme(
       plot.title.position = "plot",
+      plot.title = element_text(hjust = 0.5),
       plot.background = element_rect(fill = "#fdfbf7", color = NA),
       panel.background = element_rect(fill = "#fdfbf7", color = NA),
       panel.grid.major.y = element_blank(),
