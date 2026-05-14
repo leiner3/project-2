@@ -35,7 +35,7 @@ library(htmlwidgets)
 library(visNetwork)
 library(shiny)
 
-jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 # {.page-columns .page-full}
@@ -596,7 +596,7 @@ Isolated pairs like "gadolinium enhancement" and "ejection fraction" are well-kn
 
 :::{#cr-treemap .scale-to-fill}
 
-<span class= "medium-fixed-text">Unigram Tree Map</span>
+<span class= "medium-fixed-text">Unigram Tree Map and Counts</span>
 
 ```{r}
 #| echo: false
@@ -626,18 +626,18 @@ plot_ly(
   parents = ""
 ) |>
   layout(
-    paper_bgcolor = "#fdfbf7",
+    paper_bgcolor = "white",
     plot_bgcolor  = "#fdfbf7",
-    margin = list(t = 10, l = 10, r = 10, b = 10)
+    margin = list(t = 10, l = 10, r = 50, b = 10)
   )
 ```
 :::
 
-When you look across all of the abstracts together, "myocardial," "heart," and "perfusion" take up the most space. This makes sense because most of this research comes down to one question if the heart is receiving enough blood. 
+When you look across all of the abstracts together, "myocardial," "quantification" and "perfusion" take up the most space. This makes sense because most of this research comes down to one question if the heart is receiving enough blood. 
 
 "Segmentation," "strain," and "mapping" are some of the more interesting mid-sized boxes because these are the specific tasks AI is actually being used to automate. Segmentation means tracing the outline of the heart in an image, strain means measuring how much the heart wall moves, and mapping means creating a picture of tissue properties across the whole heart.
 
-"3d," "4d," and "automated" showing up this prominently tells you about where the field is headed, since more research is aimed to happen automatically in three and four dimensions, which is a complex process in which AI is being included. 
+"3d," "4d," and "manual" showing up this prominently tells you about where the field is headed, since more research is aimed to happen automatically in three and four dimensions, which is a complex process in which AI is being included. 
 
 ::::
 
