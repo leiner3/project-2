@@ -72,3 +72,35 @@ body, section, header {
   padding-right:50px;
   color:#6EAB8A;
 }
+
+#info {
+  background-color:linen !important;
+  position: sticky;
+  z-index: -1;
+  width: 100%;
+  height: 40vh; 
+  bottom: 0;
+}
+
+#info p {
+  text-align: center;
+  font-family: 'Mulish';
+  font-weight: 100;
+  font-size: 3.1rem;
+  margin: 0;
+  position: relative;
+  display: flexbox;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#info p {
+    font-size: 1.3rem;
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  
+#cr-treemap .plotly html-widget {
+  height: 500px !important;
+}

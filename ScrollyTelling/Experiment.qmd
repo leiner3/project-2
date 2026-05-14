@@ -33,9 +33,12 @@ library(treemapify)
 library(threejs)
 library(htmlwidgets)
 library(visNetwork)
+library(shiny)
 
 jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
+
+# {.page-columns .page-full}
 
 ::::: {style="--cr-narrative-font-size:var(--size-normal);--cr-narrative-font-family:Mulish;"}
 
@@ -90,9 +93,14 @@ Our goal is to transform this large of unstructured data into well‐organized a
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
+
 @cr-linechart
 
-:::{#cr-linechart}
+:::{#cr-linechart .scale-to-fill}
+
+<span class= "medium-fixed-text">Growth of AI-Related Publications in JCMR</span>
+<br>
+
 ```{r}
 #| echo: false
 #| message: false
@@ -123,7 +131,6 @@ lineplot <- ggplot(jcmr_yearly, aes(x = year, y = n, color = keyword)) +
     "convolution" = "#A67BB8"
   )) +
   labs(
-    title = "Growth of AI-Related Publications in JCMR",
     x = "Year",
     y = "Number of Articles",
     color = "Keyword"
@@ -155,16 +162,20 @@ What is also interesting is that artificial intelligence and deep learning both 
 By 2023 all four keywords are appearing at much higher rates than they were even five years earlier showing how fast the field is moving. 
 ::::
 
+
 ::::{.cr-section layout="sidebar-right"}
+
 @cr-barchart-unigram
 
-:::{#cr-barchart-unigram}
+:::{#cr-barchart-unigram .scale-to-fill}
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-#| fig.width: 10
-#| fig.height: 8
+#| fig-width: 10
+#| fig-height: 8
+#| fig-align: center
+#| fig-dpi: 300
 
 # Stop words setup
 cmr_stopword <- c("study", "scientific", "high", "increased", "induced", 
@@ -248,7 +259,9 @@ jcmr |>
       panel.grid.minor = element_blank(),
       panel.grid.major.x = element_line(color = alpha("white", 0.15),
                                             linewidth = 0.3))
+
 ```
+
 :::
 
 Across all keywords, words like "myocardial," "perfusion," and "quantification" appear frequently, which shows us the main focus of cardiac MRI research.
@@ -263,9 +276,10 @@ In "machine learning" abstracts, "myocardial" dominates by a wide margin.
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
+
 @cr-barchart-allgram
 
-:::{#cr-barchart-allgram}
+:::{#cr-barchart-allgram .scale-to-fill}
 
 ```{r}
 # Stop words setup
@@ -440,7 +454,7 @@ trigram_descriptions <- tribble(
 ::::{.cr-section layout="sidebar-right"}
 @cr-barchart-trigram
 
-:::{#cr-barchart-trigram}
+:::{#cr-barchart-trigram .scale-to-fill}
 ```{r}
 #| echo: false
 #| message: false
@@ -497,19 +511,23 @@ Hover over any bar to see a plain English explanation of what each three word ph
 ::::{.cr-section layout="sidebar-right"}
 @cr-network
 
-:::{#cr-network}
+:::{#cr-network .scale-to-fill}
+
+<span class= "medium-fixed-text">Visualizing Relationships Among Bigrams</span>
+<br>
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-#| fig.width: 10
-#| fig.height: 8
+#| fig-align: center
+#| fig-dpi: 300
+#| fig-width: 12
+#| fig-height: 8
 
-abstract_bigram_clean <- jcmr |>
+abstract_bigram_clean_net <- jcmr |>
   select(abstract) |>
   filter(!is.na(abstract)) |>
   mutate(abstract = str_to_lower(abstract)) |>
-  mutate(abstract = str_replace_all(abstract, replace_dict)) |>
   unnest_tokens(bigram, abstract, token = "ngrams", n = 2) |>
   filter(!str_detect(bigram, "^\\d")) |>
   count(bigram, sort = TRUE) |>
@@ -519,22 +537,43 @@ abstract_bigram_clean <- jcmr |>
   filter(!is.na(word1) & !is.na(word2)) |>
   filter(n >= 3)
 
-
-pro <- abstract_bigram_clean |>
+pro <- abstract_bigram_clean_net |>
   select(word1, word2)
 
-simpleNetwork(pro, height="100px", width="100px",        
-        Source = 1,                 # column number of source
-        Target = 2,                 # column number of target
-        linkDistance = 10,          # distance between node. Increase this value to have more space between nodes
-        charge = -5,              
-        fontSize = 20,               # size of the node names
-        fontFamily = "serif",       # font og node names
-        linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
-        nodeColour = "#69b3a2",     # colour of nodes, MUST be a common colour for the whole graph
-        opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
-        zoom = T                    # Can you zoom on the figure?
-        )
+networkData <- pro
+nodes <- data.frame(name = unique(c(networkData$word1, networkData$word2)), stringsAsFactors = FALSE)
+
+degree_df <- bind_rows(
+  pro |> 
+    select(name = word1),
+  pro |> 
+    select(name = word2)) |>
+  count(name, name = "degree")
+
+# join degree onto nodes
+nodes <- nodes |>
+  left_join(degree_df, by = "name")
+
+nodes$id <- 0:(nrow(nodes) - 1)
+
+# create a data frame of the edges that uses id 0:9 instead of their names
+edges <- networkData %>%
+  left_join(nodes, by = c("word1" = "name")) %>%
+  rename(source = id) %>%
+  left_join(nodes, by = c("word2" = "name")) %>%
+  rename(target = id) %>%
+  select(source, target)
+
+edges$width <- 1
+
+# make a grouping variable that will match to colours
+nodes$group <- ifelse(nodes$name %in% networkData$word1, "Word 1", "Word 2")
+
+ColourScale <- JS('d3.scaleOrdinal().domain(["Word 1","Word 2"]).range(["#69b3a2","#7B4019"])')
+
+MyClickScript <- 'alert("You clicked " + d.name + " which is in row " + (d.index + 1) + " of your original R data frame");'
+
+forceNetwork(Links = edges, Nodes = nodes, Source = "source", Target = "target", NodeID ="name", Group = "group", Value = "width", fontSize = 20, linkDistance = 90, Nodesize = "degree", radiusCalculation = JS("Math.sqrt(d.nodesize)*7"), charge = -10, opacity = 0.9, zoom = TRUE, legend = TRUE, arrow = TRUE, opacityNoHover = 1, colourScale = JS(ColourScale), clickAction = MyClickScript)
 
 ```
 :::
@@ -552,25 +591,30 @@ Isolated pairs like "gadolinium enhancement" and "ejection fraction" are well-kn
 ::::
 
 ::::{.cr-section layout="sidebar-right"}
+
 @cr-treemap
 
-:::{#cr-treemap}
+:::{#cr-treemap .scale-to-fill}
+
+<span class= "medium-fixed-text">Unigram Tree Map</span>
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 
 library(plotly)
-
-
+ 
 treemap_data <- jcmr |>
   filter(!is.na(abstract)) |>
+  select(keyword, abstract) |>
   mutate(abstract = str_to_lower(abstract)) |>
+  mutate(abstract = str_replace_all(abstract, replace_unigram)) |>
   unnest_tokens(output = word, input = abstract) |>
   anti_join(stop_words_fix, by = "word") |>
-  filter(!word %in% remove_word) |>
-  filter(!word %in% remove_bigram_words) |>
+  filter(!word %in% filter_grams) |>
   filter(word != "NA") |>
+  filter(!word %in% c("cmr", "cardiovascular", "data", "free", "contrast", "images", "image", "imaging", "blood", "learning", "magnetic", "resonance", "flow", "approach", "heart", "jcmr", "aimed", "multi", "methods", "left", "cardiac", "time", "consuming", "measurements", "input", "derived", "accuracy", "requires", "consumption", "parameters", "single")) |>
   count(word, sort = TRUE) |>
   slice_max(n, n = 30)
 
@@ -580,7 +624,12 @@ plot_ly(
   labels = ~word,
   values = ~n,
   parents = ""
-)
+) |>
+  layout(
+    paper_bgcolor = "#fdfbf7",
+    plot_bgcolor  = "#fdfbf7",
+    margin = list(t = 10, l = 10, r = 10, b = 10)
+  )
 ```
 :::
 
@@ -592,8 +641,13 @@ When you look across all of the abstracts together, "myocardial," "heart," and "
 
 ::::
 
-::::{.cr-section layout="sidebar-right"}
-Data Source and GitHub links coming soon.
-::::
+# {#info} 
+This document was created with [Quarto](https://quarto.org), [Closeread](https://closeread.netlify.app) and [R](https://www.r-project.org). 
 
+<br>
 
+All data used was scraped from [Journal of Cardiovascular Magnetic Resonance](https://www.journalofcmr.com/). 
+
+<br>
+
+Data preparation and scrollytelling production can be found in [Github](https://github.com/leiner3/project-2).
