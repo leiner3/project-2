@@ -35,7 +35,7 @@ library(htmlwidgets)
 library(visNetwork)
 library(shiny)
 
-jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 # {.page-columns .page-full}
