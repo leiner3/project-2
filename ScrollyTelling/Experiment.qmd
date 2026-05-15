@@ -35,7 +35,7 @@ library(htmlwidgets)
 library(visNetwork)
 library(shiny)
 
-jcmr <- read_csv("~/Data Science 2/project-2/ScrollyTelling/clean_jcmr.csv")
+jcmr <- read_csv("~/project-2/ScrollyTelling/clean_jcmr.csv")
 ```
 
 # {.page-columns .page-full}
@@ -168,6 +168,10 @@ By 2023 all four keywords are appearing at much higher rates than they were even
 @cr-barchart-unigram
 
 :::{#cr-barchart-unigram .scale-to-fill}
+
+<span class= "medium-fixed-text">Most Frequent Words in Abstracts by Keyword</span>
+<br>
+
 ```{r}
 #| echo: false
 #| message: false
@@ -247,7 +251,6 @@ jcmr |>
     "convolution"            = "#A67BB8"
   )) +
   labs(
-    title = "Most Frequent Words in Abstracts by Keyword",
     x = NULL,
     y = "Count"
   ) +
@@ -492,12 +495,15 @@ trigram_plot <- abstract_trigram_clean |>
         linewidth = 0.3
       ))
 
-ggplotly(trigram_plot, tooltip = "text")
+ggplotly(trigram_plot, tooltip = "text") |>
+    layout(showlegend = FALSE)
 ```
 
 :::
 
-"Myocardial blood flow" is so far ahead of everything else on this chart that it basically summarizes what most of this research is about. At the end of the day, the most important question in cardiology is whether enough blood is reaching the heart muscle, and a huge portion of the AI research in JCMR is trying to measure that more accurately and automatically.
+"Myocardial blood flow" (MBF) is so far ahead of everything else on this chart that it basically summarizes what most of this research is about. Researchers study MBF to measure the volume of blood flows through the coronary arteries to supply the heart muscle with oxygen and nutrients
+
+At the end of the day, the most important question in cardiology is whether enough blood is reaching the heart muscle, and a huge portion of the AI research in JCMR is trying to measure that more accurately and automatically.
 
 "Late gadolinium enhancement" in second makes a lot of sense too. It is one of the oldest and most established MRI techniques for detecting scarring and damage in the heart, so it comes up constantly as a reference point that newer AI methods are trying to match or improve on.
 
@@ -626,7 +632,7 @@ plot_ly(
   parents = ""
 ) |>
   layout(
-    paper_bgcolor = "white",
+    paper_bgcolor = "#fdfbf7",
     plot_bgcolor  = "#fdfbf7",
     margin = list(t = 10, l = 10, r = 50, b = 10)
   )
